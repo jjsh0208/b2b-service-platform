@@ -117,4 +117,12 @@ public class Product {
 	public void statusSoldOut() {
 		this.status = ProductStatus.SOLD_OUT;
 	}
+
+	public void decreaseStock(int orderQuantity) {
+		if (this.quantity < orderQuantity) {
+			throw new IllegalArgumentException(
+				"재고 부족: 현재 재고(" + this.quantity + ")보다 많은 수량(" + orderQuantity + ")을 감소시킬 수 없습니다.");
+		}
+		this.quantity -= orderQuantity;
+	}
 }
