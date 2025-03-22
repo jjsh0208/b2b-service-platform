@@ -2,7 +2,6 @@ package com.devsquad10.order.presentation.controller;
 
 import java.util.UUID;
 
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -18,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.devsquad10.order.application.dto.OrderReqDto;
 import com.devsquad10.order.application.dto.OrderResDto;
 import com.devsquad10.order.application.dto.OrderUpdateReqDto;
+import com.devsquad10.order.application.dto.PageOrderResponseDto;
 import com.devsquad10.order.application.dto.response.OrderResponse;
 import com.devsquad10.order.application.service.OrderService;
 
@@ -44,7 +44,7 @@ public class OrderController {
 	}
 
 	@GetMapping("/search")
-	public ResponseEntity<OrderResponse<Page<OrderResDto>>> searchOrders(
+	public ResponseEntity<OrderResponse<PageOrderResponseDto>> searchOrders(
 		@RequestParam(required = false) String q,
 		@RequestParam(required = false) String category,
 		@RequestParam(defaultValue = "0") int page,
@@ -53,8 +53,9 @@ public class OrderController {
 		@RequestParam(defaultValue = "desc") String order) {
 
 		return ResponseEntity.status(HttpStatus.OK)
-			.body(OrderResponse.success(HttpStatus.OK.value(),
-				orderService.searchOrders(q, category, page, size, sort, order)));
+			.body(
+				OrderResponse.success(HttpStatus.OK.value(),
+					orderService.searchOrders(q, category, page, size, sort, order)));
 	}
 
 	@PatchMapping("/{id}")

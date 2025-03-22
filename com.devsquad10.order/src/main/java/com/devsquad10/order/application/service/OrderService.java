@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.devsquad10.order.application.dto.OrderReqDto;
 import com.devsquad10.order.application.dto.OrderResDto;
 import com.devsquad10.order.application.dto.OrderUpdateReqDto;
+import com.devsquad10.order.application.dto.PageOrderResponseDto;
 import com.devsquad10.order.application.dto.message.ShippingUpdateRequest;
 import com.devsquad10.order.application.dto.message.StockDecrementMessage;
 import com.devsquad10.order.application.dto.message.StockReversalMessage;
@@ -68,11 +69,13 @@ public class OrderService {
 
 	@Cacheable(cacheNames = "orderSearchCache", key = "#q + '-' + #category + '-' + #page + '-' + #size")
 	@Transactional(readOnly = true)
-	public Page<OrderResDto> searchOrders(String q, String category, int page, int size, String sort, String order) {
+	public PageOrderResponseDto searchOrders(String q, String category, int page, int size, String sort, String order) {
 
 		Page<Order> orderPages = orderQuerydslRepository.findAll(q, category, page, size, sort, order);
 
-		return orderPages.map(Order::toResponseDto);
+		Page<OrderResDto> orderResDtoPages = orderPages.map(Order::toResponseDto);
+
+		return PageOrderResponseDto.toResponse(orderResDtoPages);
 
 	}
 
