@@ -143,6 +143,7 @@ public class UserService {
 	public void deleteUser(UUID id) {
 		User user = (User)userRepository.findByIdAndDeletedAtIsNull(id)
 			.orElseThrow(() -> new IllegalArgumentException("가입되지 않은 사용자입니다."));
+		shippingClient.deleteShippingAgent(id);
 
 		user.delete(id);
 		userRepository.save(user);

@@ -43,9 +43,9 @@ public class ShippingAgentController {
 		@PathVariable(name = "id") UUID id) {
 
 		return ResponseEntity.ok(ShippingAgentResponse.success(
-				HttpStatus.OK.value(),
-				shippingAgentService.getShippingAgentById(id))
-			);
+			HttpStatus.OK.value(),
+			shippingAgentService.getShippingAgentById(id))
+		);
 	}
 
 	// TODO: 권한 확인 - MASTER, 담당 HUB, 담당 DLV_AGENT
@@ -97,7 +97,7 @@ public class ShippingAgentController {
 	}
 
 	// TODO: 권한 확인 - MASTER, 담당HUB
-	@DeleteMapping("{id}")
+	@DeleteMapping("/{id}")
 	public void deleteShippingAgent(@PathVariable(name = "id") UUID id) {
 		shippingAgentService.deleteShippingAgent(id);
 	}
