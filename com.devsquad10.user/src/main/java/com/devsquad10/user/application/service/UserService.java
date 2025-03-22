@@ -16,12 +16,16 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.devsquad10.user.application.dto.ShippingAgentFeignClientPatchRequest;
+import com.devsquad10.user.application.dto.ShippingAgentFeignClientPostRequest;
+import com.devsquad10.user.application.dto.UserInfoFeignClientResponse;
 import com.devsquad10.user.application.dto.UserLoginRequestDto;
 import com.devsquad10.user.application.dto.UserRequestDto;
 import com.devsquad10.user.application.dto.UserResponseDto;
 import com.devsquad10.user.domain.model.User;
 import com.devsquad10.user.domain.model.UserRoleEnum;
 import com.devsquad10.user.domain.repository.UserRepository;
+import com.devsquad10.user.infrastructure.client.ShippingClient;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -36,6 +40,7 @@ public class UserService {
 	private static final Logger log = LoggerFactory.getLogger(UserService.class);
 	private final UserRepository userRepository;
 	private final PasswordEncoder passwordEncoder;
+	private final ShippingClient shippingClient;
 	public static final String AUTHORIZATION_HEADER = "Authorization";
 	private final String BEARER_PREFIX = "Bearer ";
 
@@ -57,8 +62,17 @@ public class UserService {
 		if (requestDto.getRole().equals(UserRoleEnum.MASTER)) {
 			checkMasterKey(requestDto.getMasterKey());
 		}
+
 		String password = passwordEncoder.encode(requestDto.getPassword());
-		userRepository.save(new User(requestDto, password));
+		User user = userRepository.save(new User(requestDto, password));
+
+		if (user.getRole() == UserRoleEnum.DVL_OFFICER) {
+			ShippingAgentFeignClientPostRequest shippingRequest = new ShippingAgentFeignClientPostRequest();
+			shippingRequest.setId(user.getId());
+			shippingRequest.setSlackId(user.getSlackId());
+
+			shippingClient.createShippingAgent(shippingRequest);
+		}
 	}
 
 	private void duplicationCheck(String username, String email) {
@@ -105,6 +119,7 @@ public class UserService {
 			.map(UserResponseDto::new);
 	}
 
+	@Transactional
 	public void updateUserInfo(UUID id, UserRequestDto requestDto) {
 		User user = (User)userRepository.findByIdAndDeletedAtIsNull(id)
 			.orElseThrow(() -> new IllegalArgumentException("가입되지 않은 사용자입니다."));
@@ -115,6 +130,13 @@ public class UserService {
 		if (userRepository.findBySlackId(requestDto.getSlackId()).isPresent()) {
 			throw new IllegalArgumentException("이미 존재하는 슬랙 ID입니다.");
 		}
+		if (user.getRole() == UserRoleEnum.DVL_OFFICER) {
+			ShippingAgentFeignClientPatchRequest shippingRequest = new ShippingAgentFeignClientPatchRequest(
+				user.getId(), requestDto.getSlackId());
+
+			shippingClient.infoUpdateShippingAgent(shippingRequest);
+		}
+
 		user.update(requestDto);
 	}
 
@@ -143,5 +165,14 @@ public class UserService {
 
 	public void addJwtToHeader(String token, HttpServletResponse res) {
 		res.setHeader(AUTHORIZATION_HEADER, token);
+	}
+
+	public UserInfoFeignClientResponse getUserInfoRequest(UUID id) {
+		log.info("유저 정보 조회");
+		User user = (User)userRepository.findByIdAndDeletedAtIsNull(id)
+			.orElseThrow(() -> new IllegalArgumentException("가입되지 않은 사용자입니다."));
+		log.info("유저 정보 조회 완료");
+		UserInfoFeignClientResponse userInfo = new UserInfoFeignClientResponse(user.getUsername(), user.getSlackId());
+		return userInfo;
 	}
 }

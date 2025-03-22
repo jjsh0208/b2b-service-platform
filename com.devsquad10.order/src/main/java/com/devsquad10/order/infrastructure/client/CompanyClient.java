@@ -1,4 +1,4 @@
-package com.devsquad10.order.application.client;
+package com.devsquad10.order.infrastructure.client;
 
 import java.util.UUID;
 
@@ -10,5 +10,5 @@ import org.springframework.web.bind.annotation.PathVariable;
 public interface CompanyClient {
 
 	@GetMapping("/address/{id}")
-	String findRecipientAddressByCompanyId(@PathVariable UUID id);
+	String findRecipientAddressByCompanyId(@PathVariable("id") UUID id);
 }

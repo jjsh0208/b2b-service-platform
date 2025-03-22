@@ -12,13 +12,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.devsquad10.shipping.application.dto.MinimumCountAllocationResult;
-import com.devsquad10.shipping.application.dto.request.ShippingPostReqDto;
 import com.devsquad10.shipping.application.dto.request.ShippingUpdateReqDto;
 import com.devsquad10.shipping.application.dto.response.ShippingResDto;
 import com.devsquad10.shipping.application.exception.shipping.ShippingNotFoundException;
+import com.devsquad10.shipping.application.exception.shippingAgent.ShippingAgentAlreadyAllocatedException;
 import com.devsquad10.shipping.application.exception.shippingAgent.ShippingAgentNotAllocatedException;
-import com.devsquad10.shipping.domain.enums.ShippingHistoryStatus;
-import com.devsquad10.shipping.domain.enums.ShippingStatus;
+import com.devsquad10.shipping.application.service.allocation.ShippingAgentAllocation;
 import com.devsquad10.shipping.domain.model.Shipping;
 import com.devsquad10.shipping.domain.model.ShippingHistory;
 import com.devsquad10.shipping.domain.repository.ShippingHistoryRepository;
@@ -35,61 +34,7 @@ public class ShippingService {
 
 	private final ShippingRepository shippingRepository;
 	private final ShippingHistoryRepository shippingHistoryRepository;
-	private final ShippingAgentAllocationMethod shippingAgentAllocationMethod;
-
-	// TODO: 권한 확인 - MASTER
-	@CachePut(cacheNames = "shippingCache", key = "#result.id")
-	public ShippingResDto createShipping(ShippingPostReqDto shippingPostReqDto) {
-		// TODO: 1.주문: reqMessage(주문ID, 공급업체ID, 수령업체ID, 배송지 주소, 요청사항) 받기
-
-		// TODO: 2.업체: 각각 매개변수(공급업체ID, 수령업체ID) 조회(Feign Client 통신) -> 출발허브ID, 도착허브ID 추출
-		// TODO: 2-2.허브: 존재하는 허브 ID 확인
-
-		// TODO: 3.배송 생성: shippingPostReqDto(수령인, 수령인 번호) 등
-		Shipping shipping = Shipping.builder()
-			.status(ShippingStatus.HUB_WAIT)
-			// TODO: 2.추출 출발허브ID,도착허브ID 추가
-			.departureHubId(UUID.randomUUID())
-			// TODO: 1.주문ID,주소,요청사항 추가
-			.destinationHubId(UUID.randomUUID())
-			.orderId(UUID.randomUUID())
-			.address("orderMessage 주소")
-			.requestDetails("orderMessage 요청사항")
-			.recipientName(shippingPostReqDto.getRecipientName())
-			.recipientPhone(shippingPostReqDto.getRecipientPhone())
-			.companyShippingManagerId(null) // 배송담당자 배정되면 update 처리
-		.build();
-
-		// Shipping 엔티티를 먼저 저장
-		Shipping savedShipping = shippingRepository.save(shipping);
-
-		// TODO: 4.배송 경로기록 생성: 허브간 이동정보 feign client 매개변수(출발/도착허브 ID)와 일치하는 예상거리, 소요시간, 경유지(List) 추출
-		// 허브간 이동정보(하) 구현 시, 배송 허브 순번 1 고정
-		// 허브간 이동정보(상) 구현 시, 경유지 엔티티 추가 생성 -> 이동정보 ID로 List 조회해서 list.length() 총 순번 지정
-		ShippingHistory shippingHistory = ShippingHistory.builder()
-			.shipping(savedShipping)
-			.shippingPathSequence(1)
-			.departureHubId(shipping.getDepartureHubId())
-			.destinationHubId(shipping.getDestinationHubId())
-			.shippingManagerId(UUID.randomUUID()) // 배송담당자: type(허브담당자 10명) 중, 한명 라운드 로빈 배정
-			.estiDist(123432.23)
-			.estTime(132421)
-			.actDist(123445.34)
-			.actTime(132421)
-			.historyStatus(ShippingHistoryStatus.HUB_WAIT) // 주문 생성 완료까지 허브 대기(=배송 시작 전)
-		.build();
-
-		ShippingHistory savedShippingHistory = shippingHistoryRepository.save(shippingHistory);
-		log.info("savedShippingHistory 상태 {}", savedShippingHistory.getHistoryStatus());
-
-		// TODO: 5.배송/배송경로기록 생성 완료 -> 주문에 전달할 messageDto(배송 ID, 예외상태 코드)
-		// TODO: 예외 발생 시, 모두 롤백 처리 구현 필요!
-		//TODO: 주문 생성됐는지 확인하는 방법? - feign client?
-		// 이유 : 주문 생성(완료) 전까지 허브간 이동 불가 = 배송 경로기록 상태(HUB_WAIT) 변경 못함.
-
-		// savedShipping 값이 변경이 생길 시, save 필요
-		return savedShipping.toResponseDto();
-	}
+	private final ShippingAgentAllocation shippingAgentAllocation;
 
 	// TODO: 권한 확인 - MASTER, 담당 HUB, DVL_AGENT
 	// 변경1. 배송 정보(수령인, 수령인 번호) update
@@ -104,7 +49,7 @@ public class ShippingService {
 		shipping.preUpdate();
 		return shippingRepository.save(shipping.toBuilder()
 			.recipientName((shippingUpdateReqDto.getRecipientName() == null) ? shipping.getRecipientName() : shippingUpdateReqDto.getRecipientName())
-			.recipientPhone((shippingUpdateReqDto.getRecipientPhone() == null) ? shipping.getRecipientPhone() : shippingUpdateReqDto.getRecipientPhone())
+			.recipientSlackId((shippingUpdateReqDto.getRecipientPhone() == null) ? shipping.getRecipientSlackId() : shippingUpdateReqDto.getRecipientPhone())
 			.build()).toResponseDto();
 	}
 	// 변경2. 배송 추적에 따른 현재상태(HUB_ARV) update
@@ -155,8 +100,11 @@ public class ShippingService {
 			.orElseThrow(() -> new ShippingNotFoundException("ID " + id + "에 해당하는 배송 데이터를 찾을 수 없습니다."));
 
 		// 배정 횟수 컬럼 추가하여 배정 시 횟수 업데이트 구현 -> 최소 배정 건수인 배송담당자 선택
-		MinimumCountAllocationResult allocationResult = shippingAgentAllocationMethod.allocationResult(
-			shipping.getCompanyShippingManagerId(),
+		// 배송담당자 ID가 이미 배정된 경우 처리
+		if (shipping.getCompanyShippingManagerId() != null) {
+			throw new ShippingAgentAlreadyAllocatedException("업체 배송담당자가 이미 배정되어 담당자배정 불가합니다.");
+		}
+		MinimumCountAllocationResult allocationResult = shippingAgentAllocation.allocateCompanyAgent(
 			shipping.getDestinationHubId(),
 			shipping.getStatus()
 		);

@@ -16,7 +16,7 @@ public interface HubClient {
 
 	// 출발허브 ID와 도착허브 ID와 일치하는
 	// 허브간 경유지 & 각 허브구간별 예상시간과 예상거리 응답 받는 API 호출
-	@GetMapping("/api/hub/info/{departureHubId}/{destinationHubId}")
+	@GetMapping("info/{departureHubId}/{destinationHubId}")
 	List<HubFeignClientGetRequest> getHubRouteInfo (
 		@PathVariable("departureHubId") UUID departureHubId,
 		@PathVariable("destinationHubId") UUID destinationHubId

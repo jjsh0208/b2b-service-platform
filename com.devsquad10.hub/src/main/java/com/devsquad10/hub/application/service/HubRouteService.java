@@ -1,7 +1,11 @@
 package com.devsquad10.hub.application.service;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.cache.annotation.CacheEvict;
@@ -20,6 +24,7 @@ import com.devsquad10.hub.application.dto.req.HubRouteUpdateRequestDto;
 import com.devsquad10.hub.application.dto.res.HubRouteCreateResponseDto;
 import com.devsquad10.hub.application.dto.res.HubRouteGetOneResponseDto;
 import com.devsquad10.hub.application.dto.res.HubRouteUpdateResponseDto;
+import com.devsquad10.hub.application.dto.res.HubRouteWaypointDto;
 import com.devsquad10.hub.application.dto.res.PagedHubRouteItemResponseDto;
 import com.devsquad10.hub.application.dto.res.PagedHubRouteResponseDto;
 import com.devsquad10.hub.application.exception.HubNotFoundException;
@@ -27,6 +32,7 @@ import com.devsquad10.hub.application.exception.HubRouteNotFoundException;
 import com.devsquad10.hub.application.exception.RouteStrategySelectionException;
 import com.devsquad10.hub.domain.model.Hub;
 import com.devsquad10.hub.domain.model.HubRoute;
+import com.devsquad10.hub.domain.model.HubRouteWaypoint;
 import com.devsquad10.hub.domain.repository.HubRepository;
 import com.devsquad10.hub.domain.repository.HubRouteRepository;
 import com.devsquad10.hub.infrastructure.client.dto.HubFeignClientGetRequest;
@@ -69,6 +75,37 @@ public class HubRouteService {
 			.distance(calculationResult.getDistance())
 			.duration(calculationResult.getDuration())
 			.build();
+
+		if (calculationResult.getWaypoint() != null) {
+			// 경유지 ID 가져오기
+			Set<UUID> waypointHubIds = new HashSet<>();
+
+			for (HubRouteWaypointDto dto : calculationResult.getWaypoint()) {
+				waypointHubIds.add(dto.getDepartureHubId());
+				waypointHubIds.add(dto.getDestinationHubId());
+			}
+
+			Map<UUID, Hub> waypointHubMap = new HashMap<>();
+
+			// 모든 경유 허브 조회
+			for (Hub hub : hubRepository.findAllById(waypointHubIds)) {
+				waypointHubMap.put(hub.getId(), hub);
+			}
+
+			List<HubRouteWaypoint> waypointEntities = calculationResult.getWaypoint().stream()
+				.map(dto -> HubRouteWaypoint.builder()
+					.hubRoute(newHubRoute)
+					.departureHub(waypointHubMap.get(dto.getDepartureHubId()))
+					.destinationHub(waypointHubMap.get(dto.getDestinationHubId()))
+					.sequence(dto.getSequence())
+					.distance(dto.getDistance())
+					.duration(dto.getDuration())
+					.build()
+				)
+				.toList();
+
+			newHubRoute.getWaypoints().addAll(waypointEntities);
+		}
 
 		HubRoute savedRoute = hubRouteRepository.save(newHubRoute);
 
@@ -142,6 +179,10 @@ public class HubRouteService {
 		};
 	}
 
+	// TODO: 중복 코드 리팩토링
+	@Caching(evict = {
+		@CacheEvict(value = "hubRouteSearchCache", allEntries = true)
+	})
 	public List<HubFeignClientGetRequest> getHubRouteInfo(UUID departureHubId, UUID destinationHubId) {
 		Hub departureHub = hubRepository.findById(departureHubId)
 			.orElseThrow(() -> new HubNotFoundException("출발 허브를 찾을 수 없습니다: " + departureHubId));
@@ -165,6 +206,37 @@ public class HubRouteService {
 			.distance(calculationResult.getDistance())
 			.duration(calculationResult.getDuration())
 			.build();
+
+		if (calculationResult.getWaypoint() != null) {
+			// 경유지 ID 가져오기
+			Set<UUID> waypointHubIds = new HashSet<>();
+
+			for (HubRouteWaypointDto dto : calculationResult.getWaypoint()) {
+				waypointHubIds.add(dto.getDepartureHubId());
+				waypointHubIds.add(dto.getDestinationHubId());
+			}
+
+			Map<UUID, Hub> waypointHubMap = new HashMap<>();
+
+			// 모든 경유 허브 조회
+			for (Hub hub : hubRepository.findAllById(waypointHubIds)) {
+				waypointHubMap.put(hub.getId(), hub);
+			}
+
+			List<HubRouteWaypoint> waypointEntities = calculationResult.getWaypoint().stream()
+				.map(dto -> HubRouteWaypoint.builder()
+					.hubRoute(newHubRoute)
+					.departureHub(waypointHubMap.get(dto.getDepartureHubId()))
+					.destinationHub(waypointHubMap.get(dto.getDestinationHubId()))
+					.sequence(dto.getSequence())
+					.distance(dto.getDistance())
+					.duration(dto.getDuration())
+					.build()
+				)
+				.toList();
+
+			newHubRoute.getWaypoints().addAll(waypointEntities);
+		}
 
 		HubRoute savedRoute = hubRouteRepository.save(newHubRoute);
 

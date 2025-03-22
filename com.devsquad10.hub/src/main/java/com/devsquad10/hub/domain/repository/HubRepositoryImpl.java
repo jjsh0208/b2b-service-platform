@@ -1,5 +1,6 @@
 package com.devsquad10.hub.domain.repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -36,5 +37,10 @@ public class HubRepositoryImpl implements HubRepository {
 	@Override
 	public boolean existsById(UUID id) {
 		return jpaHubRepository.existsById(id);
+	}
+
+	@Override
+	public List<Hub> findAllById(Iterable<UUID> ids) {
+		return jpaHubRepository.findAllById(ids);
 	}
 }

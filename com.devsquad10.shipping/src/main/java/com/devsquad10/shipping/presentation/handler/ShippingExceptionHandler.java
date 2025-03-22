@@ -10,7 +10,7 @@ import com.devsquad10.shipping.application.dto.ShippingResponse;
 import com.devsquad10.shipping.application.exception.shipping.ShippingNotFoundException;
 
 @RestControllerAdvice
-public class ShippingHandler {
+public class ShippingExceptionHandler {
 
 	// 배송,배송 경로 기록 - 커스텀 예외 처리
 	// 배송Id 존재X

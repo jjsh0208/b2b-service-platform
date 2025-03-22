@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.devsquad10.order.application.dto.message.ShippingCreateRequest;
+import com.devsquad10.order.application.dto.message.ShippingUpdateRequest;
 import com.devsquad10.order.application.dto.message.StockDecrementMessage;
 import com.devsquad10.order.application.dto.message.StockReversalMessage;
 import com.devsquad10.order.application.messaging.OrderMessageService;
@@ -25,6 +26,9 @@ public class RabbitMqMessageService implements OrderMessageService {
 	@Value("${shippingMessage.queue.shipping.request}")
 	private String queueShippingCreateRequest;
 
+	@Value("${shippingMessage.queue.shipping_update.request}")
+	private String queueShippingUpdateRequest;
+
 	@Override
 	public void sendStockDecrementMessage(StockDecrementMessage stockDecrementMessage) {
 		rabbitTemplate.convertAndSend(queueRequestStock, stockDecrementMessage);
@@ -38,5 +42,10 @@ public class RabbitMqMessageService implements OrderMessageService {
 	@Override
 	public void sendShippingCreateMessage(ShippingCreateRequest shippingCreateRequest) {
 		rabbitTemplate.convertAndSend(queueShippingCreateRequest, shippingCreateRequest);
+	}
+
+	@Override
+	public void sendShippingUpdateMessage(ShippingUpdateRequest shippingUpdateRequest) {
+		rabbitTemplate.convertAndSend(queueShippingUpdateRequest, shippingUpdateRequest);
 	}
 }

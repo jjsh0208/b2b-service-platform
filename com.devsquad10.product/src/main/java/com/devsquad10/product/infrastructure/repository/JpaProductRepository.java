@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.querydsl.QuerydslPredicateExecutor;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.devsquad10.product.domain.model.Product;
@@ -21,6 +22,6 @@ public interface JpaProductRepository
 	@Transactional
 	@Query("UPDATE Product p SET p.quantity = p.quantity - :orderQuantity " +
 		"WHERE p.id = :productId AND p.quantity >= :orderQuantity")
-	int decreaseStock(UUID productId, int orderQuantity);
+	int decreaseStock(@Param("productId") UUID productId, @Param("orderQuantity") int orderQuantity);
 
 }

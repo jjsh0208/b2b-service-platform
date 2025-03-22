@@ -2,6 +2,7 @@ package com.devsquad10.shipping.domain.model;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -11,6 +12,7 @@ import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import com.devsquad10.shipping.application.dto.message.ShippingCreateResponse;
 import com.devsquad10.shipping.application.dto.response.ShippingResDto;
 import com.devsquad10.shipping.domain.enums.ShippingStatus;
 
@@ -60,7 +62,7 @@ public class Shipping {
 	@Column(nullable = false)
 	private UUID destinationHubId;
 
-	@Column
+	@Column(nullable = false)
 	private UUID orderId;
 
 	@Column(nullable = false)
@@ -70,13 +72,18 @@ public class Shipping {
 	private String recipientName;
 
 	@Column(nullable = false)
-	private String recipientPhone;
+	private String recipientSlackId;
 
 	@Column
 	private String requestDetails;
 
 	@Column(nullable = true)
 	private UUID companyShippingManagerId;
+
+	@Column
+	private Date deadLine;
+	// @Column
+	// private String deadLine;
 
 	@OneToMany(mappedBy = "shipping", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	private List<ShippingHistory> historyList = new ArrayList<>();
@@ -134,6 +141,14 @@ public class Shipping {
 			this.status,
 			this.orderId
 		);
+	}
+
+	public ShippingCreateResponse toShippingCreateMessage() {
+		return ShippingCreateResponse.builder()
+			.shippingId(this.id)
+			.orderId(this.orderId)
+			.status("SUCCESS")
+			.build();
 	}
 
 	// public void addShippingHistory(ShippingHistory shippingHistory) {

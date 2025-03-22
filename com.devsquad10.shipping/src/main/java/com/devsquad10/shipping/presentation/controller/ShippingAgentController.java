@@ -79,17 +79,8 @@ public class ShippingAgentController {
 	//TODO: 권한 확인 - MASTER, 담당HUB
 	// 1.유저 feign client 호출하여 넘겨받은 정보 변경
 	@PatchMapping("/info-update")
-	public ResponseEntity<ShippingAgentResponse<ShippingAgentResDto>> infoUpdateShippingAgent(
-		@RequestBody ShippingAgentFeignClientPatchRequest request) throws Exception {
-
-		try {
-			return ResponseEntity.ok(ShippingAgentResponse.success(
-				HttpStatus.OK.value(),
-				shippingAgentService.infoUpdateShippingAgent(request))
-			);
-		} catch (Exception e) {
-			throw new Exception("e.getMessage()");
-		}
+	public void infoUpdateShippingAgent(@RequestBody ShippingAgentFeignClientPatchRequest request) {
+		shippingAgentService.infoUpdateShippingAgent(request);
 	}
 
 	// TODO: 권한 확인 - MASTER, 담당HUB
@@ -107,14 +98,8 @@ public class ShippingAgentController {
 
 	// TODO: 권한 확인 - MASTER, 담당HUB
 	@DeleteMapping("{id}")
-	public ResponseEntity<ShippingAgentResponse<String>> deleteShippingAgent(
-		@PathVariable(name = "id") UUID id
-	) {
+	public void deleteShippingAgent(@PathVariable(name = "id") UUID id) {
 		shippingAgentService.deleteShippingAgent(id);
-		return ResponseEntity.ok(ShippingAgentResponse.success(
-			HttpStatus.OK.value(),
-			"배송 관리자 정보가 성공적으로 삭제 되었습니다.")
-		);
 	}
 
 	// TODO: 배송담당자ID로 배송담당자 단일 조회 - User 삭제 시, feign client 호출 요청용

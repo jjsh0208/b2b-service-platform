@@ -1,4 +1,4 @@
-package com.devsquad10.order.application.dto.message;
+package com.devsquad10.shipping.application.dto.message;
 
 import java.util.UUID;
 

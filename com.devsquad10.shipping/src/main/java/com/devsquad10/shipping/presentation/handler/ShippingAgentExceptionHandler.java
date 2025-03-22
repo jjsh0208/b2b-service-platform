@@ -19,7 +19,7 @@ import com.devsquad10.shipping.application.exception.shippingAgent.SlackMessageS
 import jakarta.persistence.EntityNotFoundException;
 
 @RestControllerAdvice
-public class ShippingAgentHandler {
+public class ShippingAgentExceptionHandler {
 
 	// 배송 담당자 - 커스텀 예외 처리
 	// 담당자 타입 존재X

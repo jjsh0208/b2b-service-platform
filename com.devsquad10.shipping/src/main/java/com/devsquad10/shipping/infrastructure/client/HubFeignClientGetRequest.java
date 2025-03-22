@@ -15,6 +15,6 @@ public class HubFeignClientGetRequest {
 	private UUID departureHubId; // 허브1 ID
 	private UUID destinationHubId; // 허브3 ID
 	private Integer time;
-	private Integer distance;
+	private Double distance;
 }
 

@@ -118,7 +118,7 @@ public class ShippingAgentService {
 	//TODO: 권한 확인 - MASTER, 담당HUB
 	// 1.유저 feign client 호출하여 넘겨받은 정보 변경
 	// 삭제된 배송담당자ID 경우, internal server error 발생
-	public ShippingAgentResDto infoUpdateShippingAgent(
+	public void infoUpdateShippingAgent(
 		ShippingAgentFeignClientPatchRequest request) {
 
 		// shippingId 유효성 검사
@@ -137,7 +137,7 @@ public class ShippingAgentService {
 		}
 
 		target.preUpdate();
-		return shippingAgentRepository.save(target.toBuilder()
+		shippingAgentRepository.save(target.toBuilder()
 			.shippingManagerId(request.getShippingManagerId())
 			.hubId(request.getHubId())
 			.shippingManagerSlackId(request.getSlackId())

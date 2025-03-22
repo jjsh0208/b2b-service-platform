@@ -34,7 +34,7 @@ public class P2PRouteCalculateStrategy implements HubRouteCalculateStrategy {
 		return RouteCalculationResult.builder()
 			.distance(distance)
 			.duration(durationInMillis)
-			.waypoints(Collections.emptyList())
+			.waypoint(Collections.emptyList())
 			.build();
 	}
 
@@ -48,7 +48,7 @@ public class P2PRouteCalculateStrategy implements HubRouteCalculateStrategy {
 		return RouteCalculationResult.builder()
 			.distance(Double.valueOf(apiResult.getDistance()))
 			.duration(apiResult.getDuration())
-			.waypoints(Collections.emptyList())
+			.waypoint(Collections.emptyList())
 			.build();
 	}
 

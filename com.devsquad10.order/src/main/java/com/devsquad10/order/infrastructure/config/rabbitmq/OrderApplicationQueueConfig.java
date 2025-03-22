@@ -28,6 +28,13 @@ public class OrderApplicationQueueConfig {
 	@Value("${shippingMessage.exchange.shipping.response}")
 	private String shippingCreateResponseExchange;
 
+	@Value("${shippingMessage.exchange.shipping_update.request}")
+	private String shippingUpdateRequestExchange;
+
+	@Value("${shippingMessage.exchange.shipping_update.response}")
+	private String shippingUpdateResponseExchange;
+
+	//queue
 	@Value("${stockMessage.queue.stock.request}")
 	private String queueRequestStock;
 
@@ -42,6 +49,12 @@ public class OrderApplicationQueueConfig {
 
 	@Value("${shippingMessage.queue.shipping.response}")
 	private String queueShippingCreateResponse;
+
+	@Value("${shippingMessage.queue.shipping_update.request}")
+	private String queueShippingUpdateRequest;
+
+	@Value("${shippingMessage.queue.shipping_update.response}")
+	private String queueShippingUpdateResponse;
 
 	/**
 	 * exchange
@@ -71,6 +84,16 @@ public class OrderApplicationQueueConfig {
 		return new TopicExchange(shippingCreateResponseExchange);
 	}
 
+	@Bean
+	public TopicExchange shippingUpdateRequestExchange() {
+		return new TopicExchange(shippingUpdateRequestExchange);
+	}
+
+	@Bean
+	public TopicExchange shippingUpdateResponseExchange() {
+		return new TopicExchange(shippingUpdateResponseExchange);
+	}
+
 	/**
 	 * queue
 	 */
@@ -97,6 +120,16 @@ public class OrderApplicationQueueConfig {
 	@Bean
 	public Queue queueShippingCreateResponse() {
 		return new Queue(queueShippingCreateResponse);
+	}
+
+	@Bean
+	public Queue queueShippingUpdateRequest() {
+		return new Queue(queueShippingUpdateRequest);
+	}
+
+	@Bean
+	public Queue queueShippingUpdateResponse() {
+		return new Queue(queueShippingUpdateResponse);
 	}
 
 	/**
@@ -129,6 +162,20 @@ public class OrderApplicationQueueConfig {
 		return BindingBuilder.bind(queueShippingCreateResponse())
 			.to(shippingCreateResponseExchange())
 			.with(queueShippingCreateResponse);
+	}
+
+	@Bean
+	public Binding bindingRequestShippingUpdate() {
+		return BindingBuilder.bind(queueShippingUpdateRequest())
+			.to(shippingUpdateRequestExchange())
+			.with(queueShippingUpdateRequest);
+	}
+
+	@Bean
+	public Binding bindingResponseShippingUpdate() {
+		return BindingBuilder.bind(queueShippingUpdateResponse())
+			.to(shippingUpdateResponseExchange())
+			.with(queueShippingUpdateResponse);
 	}
 
 	@Bean

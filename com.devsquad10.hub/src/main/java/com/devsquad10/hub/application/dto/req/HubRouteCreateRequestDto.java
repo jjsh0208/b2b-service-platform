@@ -24,5 +24,5 @@ public class HubRouteCreateRequestDto {
 	private UUID destinationHubId;
 
 	@Builder.Default
-	private HubRouteStrategyType strategyType = HubRouteStrategyType.P2P_API;
+	private HubRouteStrategyType strategyType = HubRouteStrategyType.HUB_TO_HUB_RELAY;
 }

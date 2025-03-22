@@ -1,6 +1,7 @@
 package com.devsquad10.hub.application.dto.res;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,9 +29,13 @@ public class HubRouteGetOneResponseDto {
 	private UUID createdBy;
 	private LocalDateTime updatedAt;
 	private UUID updatedBy;
-	private List<HubRouteWaypoint> waypoints;
+	private List<HubRouteWaypointDto> waypoints;
 
 	public static HubRouteGetOneResponseDto toResponseDto(HubRoute hubRoute) {
+		List<HubRouteWaypointDto> waypointDtos = hubRoute.getWaypoints().stream()
+			.sorted(Comparator.comparing(HubRouteWaypoint::getSequence))
+			.map(HubRouteWaypointDto::fromEntity)
+			.toList();
 
 		return HubRouteGetOneResponseDto.builder()
 			.id(hubRoute.getId())
@@ -44,7 +49,7 @@ public class HubRouteGetOneResponseDto {
 			.createdBy(hubRoute.getCreatedBy())
 			.updatedAt(hubRoute.getUpdatedAt())
 			.updatedBy(hubRoute.getUpdatedBy())
-			.waypoints(hubRoute.getWaypoints())
+			.waypoints(waypointDtos)
 			.build();
 	}
 }

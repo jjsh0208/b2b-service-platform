@@ -44,7 +44,7 @@ public class HubConnection {
 	private Hub connectedHub;
 
 	// 연결 가중치 (이동 시간)
-	private Double weight;
+	private Integer weight;
 
 	// 연결 상태
 	private Boolean active;

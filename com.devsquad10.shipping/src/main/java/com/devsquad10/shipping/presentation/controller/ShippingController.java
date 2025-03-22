@@ -29,18 +29,18 @@ public class ShippingController {
 
 	private final ShippingService shippingService;
 
-	// TODO: 권한 확인 - MASTER
-	// TODO: 주문 생성 시, 메시지 전달 endpoint 로 변경 예정
-	@PostMapping
-	public ResponseEntity<ShippingResponse<ShippingResDto>> shipping(
-		@RequestBody ShippingPostReqDto shippingReqDto) {
-
-		return ResponseEntity.status(HttpStatus.OK)
-			.body(ShippingResponse.success(
-				HttpStatus.OK.value(),
-				shippingService.createShipping(shippingReqDto))
-			);
-	}
+	// // TODO: 권한 확인 - MASTER
+	// // TODO: 주문 생성 시, 메시지 전달 endpoint 로 변경 예정
+	// @PostMapping
+	// public ResponseEntity<ShippingResponse<ShippingResDto>> shipping(
+	// 	@RequestBody ShippingPostReqDto shippingReqDto) {
+	//
+	// 	return ResponseEntity.status(HttpStatus.OK)
+	// 		.body(ShippingResponse.success(
+	// 			HttpStatus.OK.value(),
+	// 			shippingService.createShipping(shippingReqDto))
+	// 		);
+	// }
 
 	// TODO: 권한 확인 - MASTER, 담당 HUB, DVL_AGENT
 	@PatchMapping("/{id}")

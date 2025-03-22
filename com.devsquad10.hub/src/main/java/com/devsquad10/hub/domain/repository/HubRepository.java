@@ -1,5 +1,6 @@
 package com.devsquad10.hub.domain.repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -16,4 +17,6 @@ public interface HubRepository {
 	Page<Hub> findAll(HubSearchRequestDto request);
 
 	boolean existsById(UUID id);
+
+	List<Hub> findAllById(Iterable<UUID> ids);
 }
