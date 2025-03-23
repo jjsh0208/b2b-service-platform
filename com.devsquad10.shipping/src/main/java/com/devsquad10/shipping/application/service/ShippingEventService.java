@@ -26,10 +26,10 @@ import com.devsquad10.shipping.domain.repository.ShippingHistoryRepository;
 import com.devsquad10.shipping.domain.repository.ShippingRepository;
 import com.devsquad10.shipping.infrastructure.client.CompanyClient;
 import com.devsquad10.shipping.infrastructure.client.HubClient;
-import com.devsquad10.shipping.infrastructure.client.HubFeignClientGetRequest;
-import com.devsquad10.shipping.infrastructure.client.ShippingCompanyInfoDto;
+import com.devsquad10.shipping.infrastructure.client.dto.HubFeignClientGetRequest;
+import com.devsquad10.shipping.infrastructure.client.dto.ShippingCompanyInfoDto;
 import com.devsquad10.shipping.infrastructure.client.UserClient;
-import com.devsquad10.shipping.infrastructure.client.UserInfoFeignClientRequest;
+import com.devsquad10.shipping.infrastructure.client.dto.UserInfoFeignClientRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import feign.FeignException;
