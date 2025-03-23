@@ -42,6 +42,11 @@ clean.doLast {
 }
 
 dependencies {
+    // 분산 추적
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'io.micrometer:micrometer-tracing-bridge-brave'
+    implementation 'io.github.openfeign:feign-micrometer'
+    implementation 'io.zipkin.reporter2:zipkin-reporter-brave'
 
     //queryDSL 의존성
     implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
