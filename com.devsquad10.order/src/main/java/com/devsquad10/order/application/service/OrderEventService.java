@@ -61,6 +61,9 @@ public class OrderEventService {
 	 */
 	public void updateOrderStatusToWaitingForShipment(ShippingResponseMessage shippingResponseMessage) {
 		Order targetOrder = findOrderById(shippingResponseMessage.getOrderId());
+		targetOrder = targetOrder.toBuilder()
+			.shippingId(shippingResponseMessage.getShippingId())
+			.build();
 		updateOrderStatus(targetOrder, OrderStatus.WAITING_FOR_SHIPMENT);
 	}
 
