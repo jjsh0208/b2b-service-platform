@@ -199,7 +199,7 @@ public class ShippingEventService {
 				.departureHubId(route.getDepartureHubId())
 				.destinationHubId(route.getDestinationHubId())
 				.shippingManagerId(selectedHubShippingAgentId)
-				.estiDist(route.getDistance())
+				.estDist(route.getDistance())
 				.estTime(route.getTime())
 				// TODO: 실제 거리 및 시간 계산은 현재 위치 기반으로 정보를 수집하여 update 처리
 				.actDist(route.getDistance() + 2.23)
