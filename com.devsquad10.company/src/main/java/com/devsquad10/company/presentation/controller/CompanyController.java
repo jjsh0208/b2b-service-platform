@@ -63,14 +63,16 @@ public class CompanyController {
 
 	@PatchMapping("/{id}")
 	public ResponseEntity<CompanyResponse<CompanyResDto>> updateCompany(@PathVariable("id") UUID id,
-		@RequestBody CompanyReqDto companyReqDto) {
+		@RequestBody CompanyReqDto companyReqDto, @RequestHeader("X-User-Id") String userId) {
 		return ResponseEntity.status(HttpStatus.OK)
-			.body(CompanyResponse.success(HttpStatus.OK.value(), companyService.updateCompany(id, companyReqDto)));
+			.body(CompanyResponse.success(HttpStatus.OK.value(),
+				companyService.updateCompany(id, companyReqDto, userId)));
 	}
 
 	@DeleteMapping("/{id}")
-	public ResponseEntity<CompanyResponse<String>> deleteCompany(@PathVariable("id") UUID id) {
-		companyService.deleteCompany(id);
+	public ResponseEntity<CompanyResponse<String>> deleteCompany(@PathVariable("id") UUID id,
+		@RequestHeader("X-User-Id") String userId) {
+		companyService.deleteCompany(id, userId);
 		return ResponseEntity.status(HttpStatus.OK)
 			.body(CompanyResponse.success(HttpStatus.OK.value(), "Company Deleted successfully"));
 	}
