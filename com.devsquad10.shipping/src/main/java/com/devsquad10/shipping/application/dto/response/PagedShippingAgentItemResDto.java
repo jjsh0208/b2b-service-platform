@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.devsquad10.shipping.domain.enums.ShippingAgentType;
+import com.devsquad10.shipping.domain.model.ShippingAgent;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,4 +30,19 @@ public class PagedShippingAgentItemResDto {
 	private Integer assignmentCount;
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
+
+	public static PagedShippingAgentItemResDto toResponse(ShippingAgent shippingAgent) {
+		return PagedShippingAgentItemResDto.builder()
+			.id(shippingAgent.getId())
+			.hubId(shippingAgent.getHubId())
+			.shippingManagerId(shippingAgent.getShippingManagerId())
+			.shippingManagerSlackId(shippingAgent.getShippingManagerSlackId())
+			.type(shippingAgent.getType())
+			.shippingSequence(shippingAgent.getShippingSequence())
+			.isTransit(shippingAgent.getIsTransit())
+			.assignmentCount(shippingAgent.getAssignmentCount())
+			.createdAt(shippingAgent.getCreatedAt())
+			.updatedAt(shippingAgent.getUpdatedAt())
+			.build();
+	}
 }

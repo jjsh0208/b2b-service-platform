@@ -3,22 +3,29 @@ package com.devsquad10.shipping.application.service;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.devsquad10.shipping.application.dto.request.ShippingAgentSearchReqDto;
+import com.devsquad10.shipping.application.dto.response.PagedShippingAgentItemResDto;
+import com.devsquad10.shipping.application.dto.response.PagedShippingAgentResDto;
 import com.devsquad10.shipping.application.dto.response.ShippingAgentResDto;
-import com.devsquad10.shipping.application.exception.shippingAgent.HubIdNotFoundException;
+
 import com.devsquad10.shipping.application.exception.shippingAgent.ShippingAgentNotFoundException;
 import com.devsquad10.shipping.application.exception.shippingAgent.ShippingAgentNotUpdateException;
-import com.devsquad10.shipping.application.exception.shippingAgent.ShippingAgentTypeNotFoundException;
+
 import com.devsquad10.shipping.domain.enums.ShippingAgentType;
 import com.devsquad10.shipping.domain.model.ShippingAgent;
 import com.devsquad10.shipping.domain.repository.ShippingAgentRepository;
 import com.devsquad10.shipping.infrastructure.client.HubClient;
-import com.devsquad10.shipping.infrastructure.client.ShippingAgentFeignClientPatchRequest;
-import com.devsquad10.shipping.infrastructure.client.ShippingAgentFeignClientPostRequest;
+import com.devsquad10.shipping.infrastructure.client.dto.ShippingAgentFeignClientPatchRequest;
+import com.devsquad10.shipping.infrastructure.client.dto.ShippingAgentFeignClientPostRequest;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,18 +38,22 @@ public class ShippingAgentService {
 	private final HubClient hubClient;
 	private final ShippingAgentRepository shippingAgentRepository;
 
-	public void createShippingAgent(@Valid ShippingAgentFeignClientPostRequest request) {
+	// 권한 확인 - MASTER, 담당 HUB
+	@Caching(
+		evict = {@CacheEvict(value = "shippingAgentSearchCache", allEntries = true)}
+	)
+	public boolean createShippingAgent(ShippingAgentFeignClientPostRequest request) {
 
-		//TODO: User 정보 feign client 로 받기
-		// 권한 확인 - MASTER, 담당 HUB
-		UUID reqShippingManagerId = request.getId(); // 배송담당자 ID
+		//TODO: User 정보 feign client 로 호출되어 생성됨
+		UUID reqShippingManagerId = request.getShippingManagerId(); // 배송담당자 ID
 		String reqSlackId = request.getSlackId();
 
 		// 담당자 타입 존재 유효성 검사
 		// TODO: COM_DVL 경우, 소속 허브 ID 유효성 검사 필요
 		ShippingAgentType reqType = request.getType();
 		if(reqType != ShippingAgentType.HUB_DVL && reqType != ShippingAgentType.COM_DVL) {
-			throw new ShippingAgentTypeNotFoundException(reqType + " Shipping Agent type is not supported");
+			log.error(reqType + " Shipping Agent type is not supported");
+			return false;
 		}
 
 		// HubId 존재 유효성 검사
@@ -50,7 +61,8 @@ public class ShippingAgentService {
 		if(reqType == ShippingAgentType.COM_DVL) {
 			// HubId 존재 유무 feign client 호출
 			if(!hubClient.isHubExists(reqHubId)) {
-				throw new HubIdNotFoundException("Hub id " + reqHubId + " not found");
+				log.error("Hub id " + reqHubId + " not found");
+				return false;
 			}
 		}
 
@@ -66,61 +78,46 @@ public class ShippingAgentService {
 			.type(request.getType())
 			.shippingSequence(nextSequence)
 			.isTransit(false)
+			.assignmentCount(0)
 			.build()
 		);
+		return true;
 	}
 
 	// TODO: 권한 확인 - MASTER, 담당 HUB, 담당 DLV_AGENT
 	@Transactional(readOnly = true)
-	public ShippingAgentResDto getShippingAgentById(UUID id) {
+	@Cacheable(value = "shippingAgentCache", key = "#shippingManagerId.toString()")
+	public ShippingAgentResDto getShippingAgentById(UUID shippingManagerId) {
 
-		ShippingAgent targetshippingAgent = shippingAgentRepository.findByIdAndDeletedAtIsNull(id)
-			.orElseThrow(() -> new ShippingAgentNotFoundException(id + ": 배송 관리자 ID가 존재하지 않습니다."));
+		ShippingAgent targetshippingAgent = shippingAgentRepository.findByShippingManagerIdAndDeletedAtIsNull(shippingManagerId)
+			.orElseThrow(() -> new ShippingAgentNotFoundException(shippingManagerId + ": 배송 관리자 ID가 존재하지 않습니다."));
 
-		return ShippingAgent.builder()
-			.id(targetshippingAgent.getId())
-			.hubId(targetshippingAgent.getHubId())
-			.shippingManagerId(targetshippingAgent.getShippingManagerId())
-			.shippingManagerSlackId(targetshippingAgent.getShippingManagerSlackId())
-			.type(targetshippingAgent.getType())
-			.shippingSequence(targetshippingAgent.getShippingSequence())
-			.isTransit(targetshippingAgent.getIsTransit())
-			.build()
-			.toResponse();
+		return ShippingAgentResDto.toResponse(targetshippingAgent);
 	}
 
 	// TODO: 권한 확인 - MASTER, 담당 HUB, 담당 DLV_AGENT
-	// @Transactional(readOnly = true)
-	// public Page<ShippingAgentResDto> searchShippingAgents(
-	// 	String query, String category,
-	// 	Pageable pageable
-	// 	// int page, int size, String sortBy, String orderBy
-	// ) {
-	//
-	// 	// pageable.getSort().stream().forEach(sort -> {
-	// 	// 	String property = sort.getProperty();
-	// 	// 	Sort.Order order = sort.isAscending() ? Sort.Order.asc(property) : Sort.Order.desc(property);
-	// 	//
-	// 	// 	Path<Object> target = Expressions.path(Object.class, QShippingAgent.shippingAgent, property);
-	// 	// 	OrderSpecifier<?> orderSpecifier = new OrderSpecifier(sort, target);
-	// 	// 	query.orderBy(orderSpecifier);
-	// 	// });
-	// 	// return null;
-	//
-	// 	Page<ShippingAgent> shippingAgentPage = shippingAgentRepository
-	// 		.findAll(query, category, pageable);
-	// 	// Page<ShippingAgentResDto> shippingAgentResDtoPage = shippingAgentPage
-	// 	// 	.map(ShippingAgentResDto::toResponse);
-	// 	return shippingAgentPage
-	// 		.map(ShippingAgentResDto::toResponse);
-	// }
+	@Transactional(readOnly = true)
+	@Cacheable(value = "shippingAgentSearchCache",
+		key = "{#request.shippingManagerId, #request.hubId, #request.page, #request.size, #request.sortOption?.name(), #request.sortOrder?.name()}"
+	)
+	public PagedShippingAgentResDto searchShippingAgents(ShippingAgentSearchReqDto request) {
+		Page<ShippingAgent> shippingAgentPage = shippingAgentRepository.findAll(request);
 
-	//TODO: 권한 확인 - MASTER, 담당HUB
-	// 1.유저 feign client 호출하여 넘겨받은 정보 변경
-	// 삭제된 배송담당자ID 경우, internal server error 발생
-	public void infoUpdateShippingAgent(
+		Page<PagedShippingAgentItemResDto> shippingAgentItemDtoPage = shippingAgentPage
+			.map(PagedShippingAgentItemResDto::toResponse);
+
+		return PagedShippingAgentResDto.toResponseDto(shippingAgentItemDtoPage, request.getSortOption());
+	}
+
+	// TODO: 권한 확인 - MASTER, 담당HUB
+	// 1. 유저의 feign client 호출되어 넘겨받은 정보 변경
+	@Caching(
+		evict = {@CacheEvict(value = "shippingAgentSearchCache", allEntries = true)}
+	)
+	public boolean infoUpdateShippingAgent(
 		ShippingAgentFeignClientPatchRequest request) {
 
+		log.info("shippingManagerId : {}", request.getShippingManagerId());
 		// shippingId 유효성 검사
 		ShippingAgent target = shippingAgentRepository
 			.findByShippingManagerIdAndDeletedAtIsNull(
@@ -130,10 +127,9 @@ public class ShippingAgentService {
 					"배송 관리자 ID:" + request.getShippingManagerId()  + "가 존재하지 않습니다."));
 
 		// hubId 유효성 검사
-		if(request.getHubId() != null) {
-			if(!hubClient.isHubExists(request.getHubId())) {
-				throw new HubIdNotFoundException("Hub id " + request.getHubId() + " not found");
-			}
+		if(!hubClient.isHubExists(request.getHubId())) {
+			log.info("Hub id " + request.getHubId() + " not found");
+			return false;
 		}
 
 		target.preUpdate();
@@ -143,18 +139,21 @@ public class ShippingAgentService {
 			.shippingManagerSlackId(request.getSlackId())
 			.build())
 			.toResponse();
+		return true;
 	}
 
 	// TODO: 권한 확인 - MASTER, 담당HUB
 	// 2.배송 여부 확인 변경
-	public ShippingAgentResDto transitUpdateShippingAgent(
-		UUID id,
-		Boolean isTransit
-	) {
+	@Caching(
+		put = {@CachePut(value = "shippingAgentCache", key = "#result.shippingManagerId.toString()")},
+		evict = {@CacheEvict(value = "shippingAgentSearchCache", allEntries = true)
+	})
+	public ShippingAgentResDto transitUpdateShippingAgent(UUID shippingManagerId, Boolean isTransit) {
 		log.info("isTransit: {}", isTransit);
-		ShippingAgent target = shippingAgentRepository.findByIdAndDeletedAtIsNull(id)
-			.orElseThrow(() -> new ShippingAgentNotFoundException(id + ": 배송 관리자 ID가 존재하지 않습니다."));
+		ShippingAgent target = shippingAgentRepository.findByShippingManagerIdAndDeletedAtIsNull(shippingManagerId)
+			.orElseThrow(() -> new ShippingAgentNotFoundException(shippingManagerId + ": 배송 관리자 ID가 존재하지 않습니다."));
 		if(isTransit == target.getIsTransit()) {
+			log.warn(isTransit + ": 배송여부가 동일하므로 수정되지 않았습니다.");
 			throw new ShippingAgentNotUpdateException(isTransit + ": 배송여부가 동일하므로 수정되지 않았습니다.");
 		}
 		target.preUpdate();
@@ -164,13 +163,22 @@ public class ShippingAgentService {
 			.toResponse();
 	}
 
-	// TODO: 삭제도 User feign client 호출로 처리
 	// TODO: 권한 확인 - MASTER, 담당HUB
-	public void deleteShippingAgent(UUID id) {
-		ShippingAgent target = shippingAgentRepository.findByIdAndDeletedAtIsNull(id)
-			.orElseThrow(() -> new ShippingAgentNotFoundException(id + ": 배송 관리자 ID가 존재하지 않습니다."));
+	// 배송담당자ID로 배송담당자 단일 조회 - User feign client 호출 요청 삭제
+	@Caching(evict = {
+		@CacheEvict(value = "shippingAgentCache", allEntries = true),
+		@CacheEvict(value = "shippingAgentSearchCache", allEntries = true)
+	})
+	public boolean deleteShippingAgentForUser(UUID shippingManagerId) {
+		ShippingAgent target = shippingAgentRepository.findByShippingManagerIdAndDeletedAtIsNull(shippingManagerId)
+			.orElseThrow(() -> new ShippingAgentNotFoundException("해당 배송담당자 id 가 존재하지 않습니다."));
 
+		if(target.getIsTransit()) {
+			log.info("배송 가능 여부가 " + target.getIsTransit() + " 이므로 배송담당자 삭제가 불가능합니다.");
+			return false;
+		}
 		shippingAgentRepository.save(target.softDelete());
+		return true;
 	}
 
 	// TODO: 담당자 배정 로직 구현은 새로운 서비스 생성하고

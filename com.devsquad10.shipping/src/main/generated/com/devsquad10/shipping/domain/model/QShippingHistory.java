@@ -38,7 +38,7 @@ public class QShippingHistory extends EntityPathBase<ShippingHistory> {
 
     public final ComparablePath<java.util.UUID> destinationHubId = createComparable("destinationHubId", java.util.UUID.class);
 
-    public final NumberPath<Double> estiDist = createNumber("estiDist", Double.class);
+    public final NumberPath<Double> estDist = createNumber("estDist", Double.class);
 
     public final NumberPath<Integer> estTime = createNumber("estTime", Integer.class);
 

@@ -44,6 +44,7 @@ public class ShippingAgentResDto implements Serializable {
 			.shippingSequence(shippingAgent.getShippingSequence())
 			.type(shippingAgent.getType())
 			.isTransit(shippingAgent.getIsTransit())
+			.assignmentCount(shippingAgent.getAssignmentCount())
 			.build();
 	}
 }
