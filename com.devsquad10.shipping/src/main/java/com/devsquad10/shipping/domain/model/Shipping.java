@@ -134,18 +134,18 @@ public class Shipping {
 	}
 
 	public ShippingResDto toResponseDto() {
-		return new ShippingResDto(
-			this.id,
-			this.status,
-			this.getDepartureHubId(),
-			this.getDestinationHubId(),
-			this.orderId,
-			this.address,
-			this.recipientName,
-			this.recipientSlackId,
-			this.requestDetails,
-			this.deadLine
-		);
+		return ShippingResDto.builder()
+			.id(this.id)
+			.status(this.status)
+			.departureHubId(this.departureHubId)
+			.destinationHubId(this.destinationHubId)
+			.orderId(this.orderId)
+			.address(this.address)
+			.recipientName(this.recipientName)
+			.recipientSlackId(this.recipientSlackId)
+			.requestDetails(this.requestDetails)
+			.deadLine(this.deadLine)
+			.build();
 	}
 
 	public ShippingResponseMessage toShippingResponseMessage() {
