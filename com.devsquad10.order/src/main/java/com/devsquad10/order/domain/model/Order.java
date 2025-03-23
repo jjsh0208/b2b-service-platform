@@ -102,13 +102,11 @@ public class Order {
 		LocalDateTime time = LocalDateTime.now();
 		this.createdAt = time;
 		this.updatedAt = time;
-		this.createdBy = "사용자";
 	}
 
 	@PreUpdate
 	protected void onUpdate() {
 		this.updatedAt = LocalDateTime.now();
-		this.updatedBy = "사용자";
 	}
 
 	public OrderResDto toResponseDto() {

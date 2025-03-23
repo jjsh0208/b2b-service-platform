@@ -41,7 +41,7 @@ public class OrderService {
 	private final ShippingClient shippingClient;
 
 	@CachePut(cacheNames = "orderCache", key = "#result.id")
-	public OrderResDto createOrder(OrderReqDto orderReqDto) {
+	public OrderResDto createOrder(OrderReqDto orderReqDto, String userId) {
 		Order order = Order.builder()
 			.recipientsId(orderReqDto.getRecipientsId())
 			.productId(orderReqDto.getProductId())
@@ -49,6 +49,7 @@ public class OrderService {
 			.requestDetails(orderReqDto.getRequestDetails())
 			.deadLine(orderReqDto.getDeadLine())
 			.status(OrderStatus.ORDER_RECEIVED)
+			.createdBy(userId)
 			.build();
 
 		// DB에 저장
@@ -83,7 +84,7 @@ public class OrderService {
 	@Caching(evict = {
 		@CacheEvict(cacheNames = "orderSearchCache", allEntries = true)
 	})
-	public OrderResDto updateOrder(UUID id, OrderUpdateReqDto orderUpdateReqDto) {
+	public OrderResDto updateOrder(UUID id, OrderUpdateReqDto orderUpdateReqDto, String userId) {
 
 		Order order = orderRepository.findByIdAndDeletedAtIsNull(id)
 			.orElseThrow(() -> new OrderNotFoundException("Order Not Found By Id : " + id));
@@ -137,6 +138,7 @@ public class OrderService {
 		order = order.toBuilder()
 			.requestDetails(orderUpdateReqDto.getRequestDetails())  // 요청 사항 업데이트
 			.deadLine(orderUpdateReqDto.getDeadLine())              // 납품 기한일자 업데이트
+			.updatedBy(userId)
 			.build();
 
 		ShippingUpdateRequest shippingUpdateRequest = ShippingUpdateRequest.builder()
@@ -160,7 +162,7 @@ public class OrderService {
 		@CacheEvict(cacheNames = "orderCache", key = "#id"),
 		@CacheEvict(cacheNames = "orderSearchCache", key = "#id")
 	})
-	public void deleteOrder(UUID id) {
+	public void deleteOrder(UUID id, String userId) {
 		Order order = orderRepository.findByIdAndDeletedAtIsNull(id)
 			.orElseThrow(() -> new OrderNotFoundException("Order Not Found By Id : " + id));
 
@@ -172,7 +174,7 @@ public class OrderService {
 
 		orderRepository.save(order.toBuilder()
 			.deletedAt(LocalDateTime.now())
-			.deletedBy("사용자")
+			.deletedBy(userId)
 			.build());
 	}
 
