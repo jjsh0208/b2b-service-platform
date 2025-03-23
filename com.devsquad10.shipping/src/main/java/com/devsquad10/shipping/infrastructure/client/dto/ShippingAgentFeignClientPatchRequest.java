@@ -1,4 +1,4 @@
-package com.devsquad10.shipping.infrastructure.client;
+package com.devsquad10.shipping.infrastructure.client.dto;
 
 import java.util.UUID;
 

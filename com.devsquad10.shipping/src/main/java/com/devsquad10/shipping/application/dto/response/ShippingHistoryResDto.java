@@ -2,10 +2,9 @@ package com.devsquad10.shipping.application.dto.response;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.UUID;
 
-import com.devsquad10.shipping.domain.enums.ShippingStatus;
+import com.devsquad10.shipping.domain.enums.ShippingHistoryStatus;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,23 +12,23 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * Shipping(배송) 응답 DTO
+ * ShippingHistory(배송경로기록) 응답 DTO
  */
 @Getter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ShippingResDto implements Serializable {
+public class ShippingHistoryResDto implements Serializable {
 	private UUID id;
-	private ShippingStatus status;
+	private Integer shippingPathSequence;
 	private UUID departureHubId;
 	private UUID destinationHubId;
-	private UUID orderId;
-	private String address;
-	private String recipientName;
-	private String recipientSlackId;
-	private String requestDetails;
-	private Date deadLine;
+	private UUID shippingManagerId;
+	private Double estDist;
+	private Integer estTime;
+	private Double actDist;
+	private Integer actTime;
+	private ShippingHistoryStatus historyStatus;
 	private LocalDateTime createdAt;
 	private UUID createdBy;
 	private LocalDateTime updatedAt;

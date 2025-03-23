@@ -1,6 +1,5 @@
 package com.devsquad10.shipping.application.dto.response;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -13,13 +12,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * ShippingAgent(배송담당자) 응답 DTO
+ * Pagination
+ * ShippingAgent(배송담당자) 목록의 개별 DTO
  */
 @Getter
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
-public class ShippingAgentResDto implements Serializable {
+@AllArgsConstructor
+public class PagedShippingAgentItemResDto {
 	private UUID id;
 	private UUID hubId;
 	private UUID shippingManagerId;
@@ -29,22 +29,20 @@ public class ShippingAgentResDto implements Serializable {
 	private Boolean isTransit;
 	private Integer assignmentCount;
 	private LocalDateTime createdAt;
-	private UUID createdBy;
 	private LocalDateTime updatedAt;
-	private UUID updatedBy;
-	private LocalDateTime deletedAt;
-	private UUID deletedBy;
 
-	public static ShippingAgentResDto toResponse(ShippingAgent shippingAgent) {
-		return ShippingAgentResDto.builder()
+	public static PagedShippingAgentItemResDto toResponse(ShippingAgent shippingAgent) {
+		return PagedShippingAgentItemResDto.builder()
 			.id(shippingAgent.getId())
 			.hubId(shippingAgent.getHubId())
 			.shippingManagerId(shippingAgent.getShippingManagerId())
 			.shippingManagerSlackId(shippingAgent.getShippingManagerSlackId())
-			.shippingSequence(shippingAgent.getShippingSequence())
 			.type(shippingAgent.getType())
+			.shippingSequence(shippingAgent.getShippingSequence())
 			.isTransit(shippingAgent.getIsTransit())
 			.assignmentCount(shippingAgent.getAssignmentCount())
+			.createdAt(shippingAgent.getCreatedAt())
+			.updatedAt(shippingAgent.getUpdatedAt())
 			.build();
 	}
 }

@@ -63,7 +63,7 @@ public class ShippingHistory {
 	private UUID shippingManagerId;
 
 	@Column
-	private Double estiDist;
+	private Double estDist;
 
 	@Column
 	private Integer estTime;

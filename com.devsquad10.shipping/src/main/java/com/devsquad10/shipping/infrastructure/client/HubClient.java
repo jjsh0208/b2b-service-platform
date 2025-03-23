@@ -7,6 +7,8 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import com.devsquad10.shipping.infrastructure.client.dto.HubFeignClientGetRequest;
+
 @FeignClient(name = "hub", url = "http://localhost:19094/api/hub")
 public interface HubClient {
 

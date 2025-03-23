@@ -13,13 +13,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * Shipping(배송) 응답 DTO
+ * Pagination
+ * Shipping(배송) 목록의 개별 DTO
  */
 @Getter
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
-public class ShippingResDto implements Serializable {
+@AllArgsConstructor
+public class PagedShippingItemResDto implements Serializable {
 	private UUID id;
 	private ShippingStatus status;
 	private UUID departureHubId;
@@ -31,9 +32,5 @@ public class ShippingResDto implements Serializable {
 	private String requestDetails;
 	private Date deadLine;
 	private LocalDateTime createdAt;
-	private UUID createdBy;
 	private LocalDateTime updatedAt;
-	private UUID updatedBy;
-	private LocalDateTime deletedAt;
-	private UUID deletedBy;
 }

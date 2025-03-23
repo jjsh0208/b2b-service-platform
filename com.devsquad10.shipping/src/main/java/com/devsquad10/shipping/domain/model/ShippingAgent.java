@@ -122,6 +122,7 @@ public class ShippingAgent {
 			.type(type)
 			.shippingSequence(shippingSequence)
 			.isTransit(isTransit)
+			.assignmentCount(assignmentCount)
 			.build();
 	}
 
