@@ -1,6 +1,5 @@
 package com.devsquad10.order.domain.model;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.UUID;
@@ -35,8 +34,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "p_order")
-public class Order implements Serializable {
-	private static final long serialVersionUID = 1L;
+public class Order {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.UUID)
