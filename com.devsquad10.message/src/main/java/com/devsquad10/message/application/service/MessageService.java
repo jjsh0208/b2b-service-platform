@@ -20,8 +20,6 @@ import com.devsquad10.message.application.dto.res.PagedMessageResponseDto;
 import com.devsquad10.message.application.exception.MessageNotFoundException;
 import com.devsquad10.message.domain.model.Message;
 import com.devsquad10.message.domain.repository.MessageRepository;
-import com.devsquad10.message.infrastructure.client.GeminiClient;
-import com.devsquad10.message.infrastructure.client.SlackClient;
 
 import lombok.RequiredArgsConstructor;
 
@@ -29,8 +27,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class MessageService {
 	private final MessageRepository messageRepository;
-	private final GeminiClient geminiClient;
-	private final SlackClient slackClient;
 
 	@Caching(evict = {
 		@CacheEvict(value = "messageSearchCache", allEntries = true)
