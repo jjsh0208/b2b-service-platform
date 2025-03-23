@@ -6,18 +6,21 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.devsquad10.shipping.application.dto.ShippingResponse;
+import com.devsquad10.shipping.application.dto.request.ShippingSearchReqDto;
 import com.devsquad10.shipping.application.dto.request.ShippingUpdateReqDto;
+import com.devsquad10.shipping.application.dto.response.PagedShippingResDto;
 import com.devsquad10.shipping.application.dto.response.ShippingResDto;
 import com.devsquad10.shipping.application.service.ShippingService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -29,23 +32,16 @@ public class ShippingController {
 
 	// TODO: 권한 확인 - MASTER, 담당 HUB, DVL_AGENT
 	@PatchMapping("/{id}")
-	public ResponseEntity<ShippingResponse<?>> updateShipping(
+	public ResponseEntity<ShippingResponse<ShippingResDto>> statusUpdateShipping(
 		@PathVariable(name = "id") UUID id,
 		@RequestBody ShippingUpdateReqDto shippingUpdateReqDto) {
 
-		try {
-			return ResponseEntity.status(HttpStatus.OK)
-				.body(ShippingResponse.success(
-					HttpStatus.OK.value(),
-					shippingService.statusUpdateShipping(id, shippingUpdateReqDto))
-				);
-		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-				.body(ShippingResponse.failure(
-					HttpStatus.BAD_REQUEST.value(),
-					"배송 수정 불가능: " + e.getMessage())
-				);
-		}
+		return ResponseEntity.status(HttpStatus.OK)
+			.body(ShippingResponse.success(
+				HttpStatus.OK.value(),
+				shippingService.statusUpdateShipping(id, shippingUpdateReqDto))
+			);
+
 	}
 
 	// 업체배송담당자 할당 - ID update
@@ -62,26 +58,24 @@ public class ShippingController {
 	public ResponseEntity<ShippingResponse<ShippingResDto>> getShippingById(
 		@PathVariable(name = "id") UUID id) {
 
-		return ResponseEntity.ok(ShippingResponse.success(
-			HttpStatus.OK.value(),
-			shippingService.getShippingById(id))
-		);
+		return ResponseEntity.status(HttpStatus.OK)
+			.body(ShippingResponse.success(
+				HttpStatus.OK.value(),
+				shippingService.getShippingById(id))
+			);
 	}
 
 	// TODO: 권한 확인 - ALL + 담당 HUB, DVL_AGENT
 	@GetMapping("/search")
-	public ResponseEntity<ShippingResponse<?>> searchShipping(
-		@RequestParam(name = "query", required = false) String query,
-		@RequestParam(name = "category", required = false) String category,
-		@RequestParam(name = "page",defaultValue= "0") int page,
-		@RequestParam(name = "size",defaultValue = "10") int size,
-		@RequestParam(name = "sortBy", defaultValue = "createdAt") String sort,
-		@RequestParam(name = "order", defaultValue = "desc") String order) {
+	public ResponseEntity<ShippingResponse<PagedShippingResDto>> searchShipping(
+		@ModelAttribute @Valid ShippingSearchReqDto request
+	) {
+		PagedShippingResDto response = shippingService.searchShipping(request);
 
 		return ResponseEntity.status(HttpStatus.OK)
 			.body(ShippingResponse.success(
 				HttpStatus.OK.value(),
-				shippingService.searchShipping(query, category, page, size, sort, order))
+				response)
 			);
 	}
 
