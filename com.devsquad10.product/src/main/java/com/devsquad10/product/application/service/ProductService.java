@@ -83,13 +83,18 @@ public class ProductService {
 		Product targetProduct = productRepository.findByIdAndDeletedAtIsNull(id)
 			.orElseThrow(() -> new ProductNotFoundException("Product Not Found By Id :" + id));
 
+		UUID hubId = companyClient.findSupplierHubIdByCompanyId(productReqDto.getSupplierId());
+
+		if (hubId == null)
+			throw new EntityNotFoundException("Supplier Fot Found By Id : " + productReqDto.getSupplierId());
+
 		return productRepository.save(targetProduct.toBuilder()
 			.name(productReqDto.getName())
 			.description(productReqDto.getDescription())
 			.price(productReqDto.getPrice())
 			.quantity(productReqDto.getQuantity())
 			.supplierId(productReqDto.getSupplierId())
-			.hubId(productReqDto.getHubId())
+			.hubId(hubId)
 			.updatedAt(LocalDateTime.now())
 			.updatedBy(userId)
 			.build()).toResponseDto();

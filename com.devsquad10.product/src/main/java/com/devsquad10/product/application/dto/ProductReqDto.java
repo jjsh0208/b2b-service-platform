@@ -22,6 +22,5 @@ public class ProductReqDto {
 	private Integer price;
 
 	private UUID supplierId;
-
-	private UUID hubId;
+	
 }
