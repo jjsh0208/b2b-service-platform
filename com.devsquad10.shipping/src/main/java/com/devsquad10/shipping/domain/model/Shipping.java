@@ -137,7 +137,14 @@ public class Shipping {
 		return new ShippingResDto(
 			this.id,
 			this.status,
-			this.orderId
+			this.getDepartureHubId(),
+			this.getDestinationHubId(),
+			this.orderId,
+			this.address,
+			this.recipientName,
+			this.recipientSlackId,
+			this.requestDetails,
+			this.deadLine
 		);
 	}
 
