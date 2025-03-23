@@ -17,12 +17,14 @@ import org.springframework.web.bind.annotation.RestController;
 import com.devsquad10.message.application.dto.req.MessageCreateRequestDto;
 import com.devsquad10.message.application.dto.req.MessageSearchRequestDto;
 import com.devsquad10.message.application.dto.req.MessageUpdateRequestDto;
+import com.devsquad10.message.application.dto.req.SlackMessageRequestDto;
 import com.devsquad10.message.application.dto.res.ApiResponse;
 import com.devsquad10.message.application.dto.res.MessageCreateResponseDto;
 import com.devsquad10.message.application.dto.res.MessageGetOneResponseDto;
 import com.devsquad10.message.application.dto.res.MessageUpdateResponseDto;
 import com.devsquad10.message.application.dto.res.PagedMessageResponseDto;
 import com.devsquad10.message.application.service.MessageService;
+import com.devsquad10.message.application.service.SlackService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +35,7 @@ import lombok.RequiredArgsConstructor;
 public class MessageController {
 
 	private final MessageService messageService;
+	private final SlackService slackService;
 
 	@PostMapping
 	public ResponseEntity<ApiResponse<MessageCreateResponseDto>> createMessage(
@@ -98,6 +101,11 @@ public class MessageController {
 				HttpStatus.OK.value(),
 				response
 			));
+	}
+
+	@PostMapping("/slack")
+	public void sendMessage(@RequestBody SlackMessageRequestDto slackMessageReqDto) {
+		slackService.sendMessage(slackMessageReqDto);
 	}
 }
 

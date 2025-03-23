@@ -16,5 +16,4 @@ public class GeminiClient {
 
 	@Value("${gemini.api.url}")
 	private String apiUrl;
-
 }
