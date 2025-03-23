@@ -175,4 +175,14 @@ public class OrderService {
 			.deletedBy("사용자")
 			.build());
 	}
+
+	public void updateOrderStatusToShipped(UUID shippingId) {
+		Order order = orderRepository.findByShippingIdAndDeletedAtIsNull(shippingId)
+			.orElseThrow(() -> new OrderNotFoundException(
+				"No order found with shippingId: " + shippingId + " and deletedAt is null"));
+
+		orderRepository.save(order.toBuilder()
+			.status(OrderStatus.SHIPPED)
+			.build());
+	}
 }

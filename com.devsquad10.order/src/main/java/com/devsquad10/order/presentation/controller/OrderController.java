@@ -72,4 +72,9 @@ public class OrderController {
 			.body(OrderResponse.success(HttpStatus.OK.value(), "Order Deleted successfully"));
 	}
 
+	@PatchMapping("/shipping/{shippingId}")
+	public void updateOrderStatusToShipped(@PathVariable("shippingId") UUID shippingId) {
+		orderService.updateOrderStatusToShipped(shippingId);
+	}
+
 }
