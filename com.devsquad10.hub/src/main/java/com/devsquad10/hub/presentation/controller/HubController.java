@@ -111,8 +111,8 @@ public class HubController {
 
 	@GetMapping("/info/{departureHubId}/{destinationHubId}")
 	public List<HubFeignClientGetRequest> getHubRouteInfo(
-		@PathVariable UUID departureHubId,
-		@PathVariable UUID destinationHubId
+		@PathVariable("departureHubId") UUID departureHubId,
+		@PathVariable("destinationHubId") UUID destinationHubId
 	) {
 
 		return hubRouteService.getHubRouteInfo(

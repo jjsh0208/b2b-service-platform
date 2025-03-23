@@ -2,11 +2,17 @@ package com.devsquad10.shipping.infrastructure.client;
 
 import java.util.UUID;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class HubFeignClientGetRequest {
 
 	// 유저:기본키(id) = 배송담당자 ID(shipping_manager_id)

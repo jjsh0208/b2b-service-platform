@@ -13,7 +13,7 @@ import lombok.ToString;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ShippingCreateResponse {
+public class ShippingResponseMessage {
 
 	private UUID orderId; // 주문 ID
 

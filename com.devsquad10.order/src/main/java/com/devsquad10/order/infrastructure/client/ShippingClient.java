@@ -10,5 +10,5 @@ import org.springframework.web.bind.annotation.PathVariable;
 public interface ShippingClient {
 
 	@DeleteMapping("/order/{orderId}")
-	boolean deleteShippingForOrder(@PathVariable UUID orderId);
+	boolean deleteShippingForOrder(@PathVariable("orderId") UUID orderId);
 }

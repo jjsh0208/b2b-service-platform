@@ -17,11 +17,16 @@ import com.devsquad10.shipping.application.dto.response.ShippingResDto;
 import com.devsquad10.shipping.application.exception.shipping.ShippingNotFoundException;
 import com.devsquad10.shipping.application.exception.shippingAgent.ShippingAgentAlreadyAllocatedException;
 import com.devsquad10.shipping.application.exception.shippingAgent.ShippingAgentNotAllocatedException;
+import com.devsquad10.shipping.application.exception.shippingAgent.ShippingAgentNotFoundException;
 import com.devsquad10.shipping.application.service.allocation.ShippingAgentAllocation;
+import com.devsquad10.shipping.domain.enums.ShippingStatus;
 import com.devsquad10.shipping.domain.model.Shipping;
+import com.devsquad10.shipping.domain.model.ShippingAgent;
 import com.devsquad10.shipping.domain.model.ShippingHistory;
+import com.devsquad10.shipping.domain.repository.ShippingAgentRepository;
 import com.devsquad10.shipping.domain.repository.ShippingHistoryRepository;
 import com.devsquad10.shipping.domain.repository.ShippingRepository;
+import com.devsquad10.shipping.infrastructure.repository.JpaShippingAgentRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,25 +39,12 @@ public class ShippingService {
 
 	private final ShippingRepository shippingRepository;
 	private final ShippingHistoryRepository shippingHistoryRepository;
+	private final ShippingAgentRepository shippingAgentRepository;
 	private final ShippingAgentAllocation shippingAgentAllocation;
 
 	// TODO: 권한 확인 - MASTER, 담당 HUB, DVL_AGENT
-	// 변경1. 배송 정보(수령인, 수령인 번호) update
-	@CachePut(cacheNames = "shippingCache", key = "#result.id", condition = "#id != null")
-	@Caching(evict = {
-		@CacheEvict(cacheNames = "shippingSearchCache", allEntries = true)
-	})
-	public ShippingResDto updateShipping(UUID id, ShippingUpdateReqDto shippingUpdateReqDto) {
-		Shipping shipping = shippingRepository.findByIdAndDeletedAtIsNull(id)
-			.orElseThrow(() -> new ShippingNotFoundException("ID " + id + "에 해당하는 배송 데이터를 찾을 수 없습니다."));
-
-		shipping.preUpdate();
-		return shippingRepository.save(shipping.toBuilder()
-			.recipientName((shippingUpdateReqDto.getRecipientName() == null) ? shipping.getRecipientName() : shippingUpdateReqDto.getRecipientName())
-			.recipientSlackId((shippingUpdateReqDto.getRecipientPhone() == null) ? shipping.getRecipientSlackId() : shippingUpdateReqDto.getRecipientPhone())
-			.build()).toResponseDto();
-	}
-	// 변경2. 배송 추적에 따른 현재상태(HUB_ARV) update
+	//TODO: GPS + Geolocation 적용하여 배송 위치 추적에 따른 배송 경로기록 상태 이벤트 처리
+	// 그 결과를 바로 배송 상태로 update 처리
 	@CachePut(cacheNames = "shippingCache", key = "#result.id", condition = "#id != null")
 	@Caching(evict = {
 		@CacheEvict(cacheNames = "shippingSearchCache", allEntries = true)
@@ -66,26 +58,8 @@ public class ShippingService {
 			.status(shippingUpdateReqDto.getStatus())
 			.build()).toResponseDto();
 	}
-	// 변경3. 주문정보(배송 주소지, 요청사항) update
-	@CachePut(cacheNames = "shippingCache", key = "#result.id", condition = "#id != null")
-	@Caching(evict = {
-		@CacheEvict(cacheNames = "shippingSearchCache",
-			allEntries = true,
-			condition = "@cacheManager.getCache('shippingSearchCache') != null"
-		)
-	})
-	public ShippingResDto infoUpdateShipping(UUID id, ShippingUpdateReqDto shippingUpdateReqDto) {
-		Shipping shipping = shippingRepository.findByIdAndDeletedAtIsNull(id)
-			.orElseThrow(() -> new ShippingNotFoundException("ID " + id + "에 해당하는 배송 데이터를 찾을 수 없습니다."));
 
-		shipping.preUpdate();
-		return shippingRepository.save(shipping.toBuilder()
-			.address((shippingUpdateReqDto.getAddress() == null) ? shipping.getAddress() : shippingUpdateReqDto.getAddress())
-			.requestDetails(shippingUpdateReqDto.getRequestDetails())
-			.build()).toResponseDto();
-	}
-
-	// 배정 로직 구현 후, 업체배송담당자 ID update
+	// TODO: 배송 상태(HUB_ARV)가 되면 이벤트 처리로, 업체 배송담당자 할당(companyShippingManagerId update)
 	@CachePut(cacheNames = "shippingCache", key = "#result.id", condition = "#id != null")
 	@Caching(evict = {
 		@CacheEvict(cacheNames = "shippingSearchCache", allEntries = true)
@@ -142,33 +116,41 @@ public class ShippingService {
 
 	// TODO: 권한 확인 - MASTER, 담당 HUB
 	//TODO: 1) condition="#id != null"인 경우, 개별 캐싱(shippingCache) 삭제 안됨
-// 			2) condition 없는 경우, 캐싱 삭제 자체가 안됨 & postgres 의 데이터는 삭제됨
-	@Caching(evict = {
-		@CacheEvict(cacheNames = "shippingCache", key = "#id"),
-		@CacheEvict(cacheNames = "shippingSearchCache",
-			allEntries = true,
-			condition = "@cacheManager.getCache('shippingSearchCache') != null")
-	})
+	//		2) condition 없는 경우, 캐싱 삭제 자체가 안됨 & postgres 의 데이터는 삭제됨
+	public boolean deleteShippingForOrder(UUID orderId) {
+		Shipping shipping = shippingRepository.findByOrderIdAndDeletedAtIsNull(orderId)
+			.orElseThrow(() -> new ShippingNotFoundException("배송 내역에서 해당하는 주문 ID: " + orderId + "가 존재하지 않습니다."));
 
-	public void deleteShipping(UUID id) {
-		Shipping shipping = shippingRepository.findByIdAndDeletedAtIsNull(id)
-			.orElseThrow(() -> new ShippingNotFoundException(id + " 해당하는 배송 ID가 존재하지 않습니다."));
+		// 배송 상태가 HUB_WAIT(허브 대기 중) 경우만 삭제 가능
+		if(shipping.getStatus() != ShippingStatus.HUB_WAIT) {
+			log.info(shipping.getStatus() + " 상태는 배송 취소가 불가능합니다.");
+			return false;
+		} else {
+			// 배송 ID로 배송경로기록 List 추출
+			List<ShippingHistory> historyList = shippingHistoryRepository.findByShippingIdAndDeletedAtIsNull(shipping.getId());
 
-		// 배송 삭제 처리
-		shippingRepository.save(shipping.softDelete());
-
-		// 배송 ID로 배송경로기록 List 추출
-		List<ShippingHistory> historyList = shippingHistoryRepository.findByShippingIdAndDeletedAtIsNull(id);
-
-		// 배송 삭제 될 때, 배송 경로기록도 삭제 처리
-		if(!historyList.isEmpty()) {
-			List<UUID> historyIdList = historyList.stream()
-				.map(ShippingHistory::getId)
-				.toList();
-			for(UUID historyId : historyIdList) {
-				ShippingHistory history = shippingHistoryRepository.findByIdAndDeletedAtIsNull(historyId);
-				shippingHistoryRepository.save(history.softDelete());
+			// 배송 삭제 될 때, 배송 경로기록도 삭제 처리
+			if (!historyList.isEmpty()) {
+				List<UUID> historyIdList = historyList.stream()
+					.map(ShippingHistory::getId)
+					.toList();
+				for (UUID historyId : historyIdList) {
+					ShippingHistory history = shippingHistoryRepository.findByIdAndDeletedAtIsNull(historyId);
+					shippingHistoryRepository.save(history.softDelete());
+					// 허브간 배송이 모두 1명의 허브배송 담당자로 배정했다는 가정하에 배송 경로삭제 시, 허브 담당자 isTransit=false 로 변경
+					UUID shippingManagerId = history.getShippingManagerId();
+					ShippingAgent selectedAgent = shippingAgentRepository.findByShippingManagerIdAndDeletedAtIsNull(shippingManagerId)
+						.orElseThrow(() -> new ShippingAgentNotFoundException("배송 담당자 id 가 존재하지 않습니다."));
+					if(selectedAgent.getIsTransit()) {
+						selectedAgent.isTransitToFalse();
+						selectedAgent.decreaseAssignmentCount();
+						shippingAgentRepository.save(selectedAgent);
+					}
+				}
 			}
+			// 배송 삭제 처리
+			shippingRepository.save(shipping.softDelete());
+			return true;
 		}
 	}
 }
