@@ -86,12 +86,10 @@ public class ShippingEventService {
 		log.info("savedShipping: {}", savedShipping);
 
 		// 배송 경로기록 생성: 허브간 이동정보 feign client 매개변수(출발/도착허브 ID)와 일치하는 예상거리, 소요시간, 경유지(List) 추출
-		// 허브간 이동정보(hub-to relay-hub) 구현 시, feign client 호출 오류 발생!
-		//TODO mvp를 위해 연결 : 허브간 이동정보(hub-to-hub)로 배송 허브 순번 1 고정
-		// 임시로 1개만 더미 데이터 입력 함.
-		//List<HubFeignClientGetRequest> hubRouteInfo = hubClient.getHubRouteInfo(supplierIdInfo.getHubId(), recipientsInfo.getHubId());
+		// 허브간 이동정보(hub-to relay-hub) 구현 시, feign client 호출하여 허브 순번대로 shippingHistory 생성
+		log.info("허브 feign client 허브 경로 정보 조회 전");
 		List<HubFeignClientGetRequest> hubRouteInfo = getHubRouteInfo(supplierIdInfo, recipientsInfo, shippingCreateMessage);
-
+		log.info("허브 feign client 허브 경로 정보 조회 후");
 		// 허브간 경로이동 생성 전, 허브 배송담당자 배정
 		UUID selectedHubShippingAgentId = allocationHubShippingManagerId(recipientsInfo.getHubId());
 
@@ -153,25 +151,24 @@ public class ShippingEventService {
 		ShippingCompanyInfoDto recipientsInfo,
 		ShippingCreateMessage shippingCreateMessage) {
 
-		//List<HubFeignClientGetRequest> hubRouteInfo = hubClient.getHubRouteInfo(supplierIdInfo.getHubId(), recipientsInfo.getHubId());
-		List<HubFeignClientGetRequest> hubRouteInfo = new ArrayList<>();
-		HubFeignClientGetRequest hubFeignClientGetRequest = HubFeignClientGetRequest.builder()
-			.sequence(1)
-			.departureHubId(supplierIdInfo.getHubId())
-			.destinationHubId(recipientsInfo.getHubId())
-			.time(1234235)
-			.distance(1231.5234233)
-			.build();
-		hubRouteInfo.add(hubFeignClientGetRequest);
+		try {
+			List<HubFeignClientGetRequest> hubRouteInfo = hubClient.getHubRouteInfo(supplierIdInfo.getHubId(),
+				recipientsInfo.getHubId());
+			log.info("husRouteInfo.size(): {}", hubRouteInfo.size());
 
-		if(hubRouteInfo == null || hubRouteInfo.isEmpty()) {
-			log.error("허브간 이동정보가 존재하지 않습니다.");
+			if (hubRouteInfo.isEmpty()) {
+				log.error("허브간 이동정보가 존재하지 않습니다.");
+				failErrorMessage(shippingCreateMessage);
+				throw new EntityNotFoundException("허브간 이동정보가 존재하지 않습니다.");
+			}
+			hubRouteInfo.sort(Comparator.comparingInt(HubFeignClientGetRequest::getSequence));
+			return hubRouteInfo;
+
+		} catch(FeignException.FeignClientException e) {
+			log.error("허브 feign client 호출 실패로 허브간 이동정보 조회 불가");
 			failErrorMessage(shippingCreateMessage);
-			throw new EntityNotFoundException("허브간 이동정보가 존재하지 않습니다.");
+			throw new ShippingCreateException("배송 생성 실패");
 		}
-
-		hubRouteInfo.sort(Comparator.comparingInt(HubFeignClientGetRequest::getSequence));
-		return hubRouteInfo;
 	}
 
 
@@ -249,8 +246,11 @@ public class ShippingEventService {
 			}
 		}
 
-		// 허브 feign client 호출하여 허브 이동 경로 조회
+		// 배송 경로기록 생성: 허브간 이동정보 feign client 매개변수(출발/도착허브 ID)와 일치하는 예상거리, 소요시간, 경유지(List) 추출
+		// 허브간 이동정보(hub-to relay-hub) 구현 시, feign client 호출하여 허브 순번대로 shippingHistory 생성
+		log.info("허브 feign client 호출하여 새로운 허브 경로 정보 조회 전");
 		List<HubFeignClientGetRequest> hubRouteInfo = getHubRouteInfo(departureHubId, recipientsInfo, shippingUpdateMessage);
+		log.info("허브 feign client 호출하여 새로운 허브 경로 정보 조회 후");
 
 		// 허브간 경로이동 생성 전, 허브 배송담당자 배정
 		UUID selectedHubShippingAgentId = allocationHubShippingManagerId(recipientsInfo.getHubId());
@@ -268,9 +268,9 @@ public class ShippingEventService {
 			.build());
 		log.info("배송 수정 후");
 		// 새로운 배송 경로기록 생성 및 저장
-		log.info("배송 경로기록 수정 전");
+		log.info("새로운 배송 경로기록 생성 전");
 		createShippingHistory(hubRouteInfo, updatedShipping, selectedHubShippingAgentId);
-		log.info("배송 경로기록 수정 후");
+		log.info("새로운 배송 경로기록 생성 후");
 		// 배송 정보 수정에 따른 배송경로기록 삭제/수정 완료 후 -> 주문에 전달할 response
 		try {
 			log.info("배송,배송경로기록 수정 후 주문 메시지 발행");
@@ -303,7 +303,7 @@ public class ShippingEventService {
 		try {
 			return companyClient.findShippingCompanyInfo(recipientsId);
 		} catch (FeignException.FeignClientException e) {
-			log.error("업체 feign client 호출 실패로 도착허브 정보 조회 불가");
+			log.error("업체 feign client 호출 실패로 인해 도착허브 정보 조회 불가");
 			failErrorMessage(shippingUpdateMessage);
 			throw new ShippingCreateException("배송 수정 실패");
 		}
@@ -326,25 +326,23 @@ public class ShippingEventService {
 		ShippingCompanyInfoDto recipientsInfo,
 		ShippingUpdateMessage shippingUpdateMessage) {
 
-		//List<HubFeignClientGetRequest> hubRouteInfo = hubClient.getHubRouteInfo(supplierIdInfo.getHubId(), recipientsInfo.getHubId());
-		List<HubFeignClientGetRequest> hubRouteUpdateInfo = new ArrayList<>();
-		HubFeignClientGetRequest hubFeignClientGetRequest = HubFeignClientGetRequest.builder()
-			.sequence(1)
-			.departureHubId(departureHubId)
-			.destinationHubId(recipientsInfo.getHubId())
-			.time(1234235)
-			.distance(1231.5234233)
-			.build();
-		hubRouteUpdateInfo.add(hubFeignClientGetRequest);
+		try {
+			List<HubFeignClientGetRequest> hubRouteUpdateInfo = hubClient.getHubRouteInfo(departureHubId,
+				recipientsInfo.getHubId());
+			log.info("hubRouteUpdateInfo.size(): {}", hubRouteUpdateInfo.size());
 
-		if(hubRouteUpdateInfo == null || hubRouteUpdateInfo.isEmpty()) {
-			log.warn("허브간 이동정보가 존재하지 않습니다.");
+			if (hubRouteUpdateInfo.isEmpty()) {
+				log.warn("허브간 이동정보가 존재하지 않습니다.");
+				failErrorMessage(shippingUpdateMessage);
+				throw new EntityNotFoundException("허브간 이동정보가 존재하지 않습니다.");
+			}
+			hubRouteUpdateInfo.sort(Comparator.comparingInt(HubFeignClientGetRequest::getSequence));
+			return hubRouteUpdateInfo;
+		} catch(FeignException.FeignClientException e) {
+			log.error("허브 feign client 호출 실패로 새로운 허브간 이동정보 조회 불가");
 			failErrorMessage(shippingUpdateMessage);
-			throw new EntityNotFoundException("허브간 이동정보가 존재하지 않습니다.");
+			throw new ShippingCreateException("배송 수정 실패");
 		}
-
-		hubRouteUpdateInfo.sort(Comparator.comparingInt(HubFeignClientGetRequest::getSequence));
-		return hubRouteUpdateInfo;
 	}
 
 }
