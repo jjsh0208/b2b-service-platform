@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,10 +31,11 @@ public class ProductController {
 	private final ProductService productService;
 
 	@PostMapping
-	public ResponseEntity<ProductResponse<ProductResDto>> createProduct(@RequestBody ProductReqDto productReqDto) {
+	public ResponseEntity<ProductResponse<ProductResDto>> createProduct(@RequestBody ProductReqDto productReqDto,
+		@RequestHeader("X-User-Id") String userId) {
 
 		return ResponseEntity.status(HttpStatus.OK)
-			.body(ProductResponse.success(HttpStatus.OK.value(), productService.createProduct(productReqDto)));
+			.body(ProductResponse.success(HttpStatus.OK.value(), productService.createProduct(productReqDto, userId)));
 
 	}
 
@@ -60,14 +62,16 @@ public class ProductController {
 
 	@PatchMapping("/{id}")
 	public ResponseEntity<ProductResponse<ProductResDto>> updateProduct(@PathVariable("id") UUID id,
-		@RequestBody ProductReqDto productReqDto) {
+		@RequestBody ProductReqDto productReqDto, @RequestHeader("X-User-Id") String userId) {
 		return ResponseEntity.status(HttpStatus.OK)
-			.body(ProductResponse.success(HttpStatus.OK.value(), productService.updateProduct(id, productReqDto)));
+			.body(ProductResponse.success(HttpStatus.OK.value(),
+				productService.updateProduct(id, productReqDto, userId)));
 	}
 
 	@DeleteMapping("/{id}")
-	public ResponseEntity<ProductResponse<String>> deleteProduct(@PathVariable("id") UUID id) {
-		productService.deleteProduct(id);
+	public ResponseEntity<ProductResponse<String>> deleteProduct(@PathVariable("id") UUID id,
+		@RequestHeader("X-User-Id") String userId) {
+		productService.deleteProduct(id, userId);
 		return ResponseEntity.status(HttpStatus.OK)
 			.body(ProductResponse.success(HttpStatus.OK.value(), "Product Deleted successfully"));
 	}

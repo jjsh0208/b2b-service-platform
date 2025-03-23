@@ -34,7 +34,7 @@ public class ProductService {
 	private final CompanyClient companyClient;
 
 	@CachePut(cacheNames = "productCache", key = "#result.id")
-	public ProductResDto createProduct(ProductReqDto productReqDto) {
+	public ProductResDto createProduct(ProductReqDto productReqDto, String userId) {
 
 		// 특정 업체 존재 유무 확인
 		// feign client
@@ -52,6 +52,7 @@ public class ProductService {
 			.supplierId(productReqDto.getSupplierId())
 			.hubId(hubId)
 			.status(ProductStatus.AVAILABLE)
+			.createdBy(userId)
 			.build()).toResponseDto();
 	}
 
@@ -78,7 +79,7 @@ public class ProductService {
 	@Caching(evict = {
 		@CacheEvict(cacheNames = "productSearchCache", allEntries = true)
 	})
-	public ProductResDto updateProduct(UUID id, ProductReqDto productReqDto) {
+	public ProductResDto updateProduct(UUID id, ProductReqDto productReqDto, String userId) {
 		Product targetProduct = productRepository.findByIdAndDeletedAtIsNull(id)
 			.orElseThrow(() -> new ProductNotFoundException("Product Not Found By Id :" + id));
 
@@ -90,7 +91,7 @@ public class ProductService {
 			.supplierId(productReqDto.getSupplierId())
 			.hubId(productReqDto.getHubId())
 			.updatedAt(LocalDateTime.now())
-			.updatedBy("사용자")
+			.updatedBy(userId)
 			.build()).toResponseDto();
 	}
 
@@ -98,13 +99,13 @@ public class ProductService {
 		@CacheEvict(cacheNames = "productCache", key = "#id"),
 		@CacheEvict(cacheNames = "productSearchCache", key = "#id")
 	})
-	public void deleteProduct(UUID id) {
+	public void deleteProduct(UUID id, String userId) {
 		Product targetProduct = productRepository.findByIdAndDeletedAtIsNull(id)
 			.orElseThrow(() -> new ProductNotFoundException("Product Not Found By Id :" + id));
 
 		productRepository.save(targetProduct.toBuilder()
 			.deletedAt(LocalDateTime.now())
-			.deletedBy("사용자")
+			.deletedBy(userId)
 			.build());
 	}
 }
