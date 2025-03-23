@@ -97,7 +97,7 @@ public class OrderService {
 				companyClient.findRecipientAddressByCompanyId(orderUpdateReqDto.getRecipientsId());
 			if (newRecipientsAddress == null) {
 				throw new IllegalArgumentException(
-					"Invalid recipient address for recipientsId: " + orderUpdateReqDto.getRecipientsId());
+					"Invalid recipient address for recipientsId : " + orderUpdateReqDto.getRecipientsId());
 			}
 
 			order = order.toBuilder()
