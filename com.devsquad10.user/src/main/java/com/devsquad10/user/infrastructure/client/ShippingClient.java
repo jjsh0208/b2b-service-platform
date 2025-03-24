@@ -12,16 +12,17 @@ import org.springframework.web.bind.annotation.RequestBody;
 import com.devsquad10.user.application.dto.ShippingAgentFeignClientPatchRequest;
 import com.devsquad10.user.application.dto.ShippingAgentFeignClientPostRequest;
 
+// ShippingAgentClient 수정해주세요!!
+// true 인 경우, 배송담당자 등록 성공
+// User 디렉토리 infrastructure > client 에 생성하여 userService에서 사용해주세요.
 @FeignClient(name = "shippingAgent", url = "http://localhost:19098/api/shipping-agent")
 public interface ShippingClient {
-
 	@PostMapping
-	void createShippingAgent(@RequestBody ShippingAgentFeignClientPostRequest request);
+	boolean createShippingAgent(@RequestBody ShippingAgentFeignClientPostRequest request);
 
 	@PatchMapping("/info-update")
-	void infoUpdateShippingAgent(
-		@RequestBody ShippingAgentFeignClientPatchRequest request);
+	boolean infoUpdateShippingAgent(@RequestBody ShippingAgentFeignClientPatchRequest request);
 
-	@DeleteMapping("/{id}")
-	void deleteShippingAgent(@PathVariable(name = "id") UUID id);
+	@DeleteMapping("/user/{shippingManagerId}")
+	boolean deleteShippingAgentForUser(@PathVariable(name = "shippingManagerId") UUID shippingManagerId);
 }

@@ -70,6 +70,8 @@ public class UserService {
 			ShippingAgentFeignClientPostRequest shippingRequest = new ShippingAgentFeignClientPostRequest();
 			shippingRequest.setId(user.getId());
 			shippingRequest.setSlackId(user.getSlackId());
+			shippingRequest.setType(null);
+			shippingRequest.setHubId(null);
 
 			shippingClient.createShippingAgent(shippingRequest);
 		}
@@ -145,7 +147,7 @@ public class UserService {
 			.orElseThrow(() -> new IllegalArgumentException("가입되지 않은 사용자입니다."));
 
 		if (user.getRole() == UserRoleEnum.DVL_OFFICER) {
-			shippingClient.deleteShippingAgent(id);
+			shippingClient.deleteShippingAgentForUser(id);
 		}
 
 		user.delete(id);
