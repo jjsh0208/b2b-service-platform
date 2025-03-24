@@ -9,7 +9,7 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.devsquad10.message.application.dto.req.GeminiRequestDto;
-import com.devsquad10.message.infrastructure.client.dto.ShippingClientData;
+import com.devsquad10.message.infrastructure.client.dto.ShippingClientDataRequestDto;
 import com.devsquad10.message.infrastructure.client.exception.RestClientApiCallException;
 import com.devsquad10.message.infrastructure.client.exception.RestClientApiParseException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -30,7 +30,7 @@ public class AiService {
 	@Value("${gemini.api.url}")
 	private String apiUrl;
 
-	public String generateShippingTimeMessage(ShippingClientData request) {
+	public String generateShippingTimeMessage(ShippingClientDataRequestDto request) {
 		// AI 서비스에 필요한 정보를 전달하고 응답 생성
 		String prompt = buildPrompt(request);
 
@@ -82,27 +82,30 @@ public class AiService {
 		}
 	}
 
-	private String buildPrompt(ShippingClientData request) {
+	private String buildPrompt(ShippingClientDataRequestDto request) {
 		return String.format("""
-				주문 번호: %s
-				주문자 정보: %s / %s
-				상품 정보: %s
-				요청 사항: %s
-				발송지: %s
-				경유지: %s
-				도착지: %s
-				배송담당자: %s / %s
+				- 주문 번호: %s
+				- 주문자 정보: %s
+				- 상품 정보: %s %s박스
+				- 요청 사항: %s
+				- 발송지: %s
+				- 경유지: %s
+				- 도착지: %s
+				- 배송담당자: %s
 				
-				위 정보를 바탕으로 배송 예상 시간을 계산하고, 최종 발송 시한을 알려주세요.
+				위 내용을 기반으로 도출된 최종 발송 시한은 [ ] 시 입니다.
+				
+				위 정보의 양식으로만 출력하고, 대략적인 최종 발송 시한을 알려주세요.
 				""",
 			request.getOrderId(),
-			request.getCustomerName(), request.getCustomerEmail(),
+			request.getCustomerName(),
 			request.getProductInfo(),
+			request.getQuantity(),
 			request.getRequestDetails(),
 			request.getDepartureHubName(),
 			request.getWaypointHubNames(),
-			request.getDestinationHubName(),
-			request.getShippingManagerName(), request.getShippingManagerEmail()
+			request.getAddress(),
+			request.getShippingManagerName()
 		);
 	}
 
