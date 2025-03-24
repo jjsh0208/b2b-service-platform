@@ -12,7 +12,7 @@ import lombok.Setter;
 @Setter
 @Builder
 @Data
-@AllArgsConstructor(onConstructor_ = @JsonCreator)
+@AllArgsConstructor
 public class UserInfoFeignClientResponse {
 	private String username;
 	private String slackId;

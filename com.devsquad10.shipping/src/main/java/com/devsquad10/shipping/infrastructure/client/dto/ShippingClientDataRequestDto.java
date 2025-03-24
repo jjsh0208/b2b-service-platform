@@ -14,7 +14,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ShippingClientDataResponseDto {
+public class ShippingClientDataRequestDto {
 	// 주문 ID
 	private UUID orderId;
 	// 주문자 이름
