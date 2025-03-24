@@ -20,6 +20,7 @@ import com.devsquad10.shipping.application.dto.response.PagedShippingResDto;
 import com.devsquad10.shipping.application.dto.response.ShippingResDto;
 import com.devsquad10.shipping.application.service.ShippingService;
 import com.devsquad10.shipping.infrastructure.client.dto.ShippingClientDataRequestDto;
+import com.devsquad10.shipping.infrastructure.client.dto.ShippingClientDataResponseDto;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,7 @@ public class ShippingController {
 	private final ShippingService shippingService;
 
 	// TODO: 권한 확인 - MASTER, 담당 HUB, DVL_AGENT
+	// 배송 상태(HUB_WAIT -> HUB_TRNS -> HUB_ARV -> COM_TRNS -> DLV_COMP)
 	@PatchMapping("/{id}")
 	public ResponseEntity<ShippingResponse<ShippingResDto>> statusUpdateShipping(
 		@PathVariable(name = "id") UUID id,
@@ -44,13 +46,13 @@ public class ShippingController {
 			);
 	}
 
-	// 허브 도착 상태(HUB_ARV) 이벤트 시, 업체배송담당자 할당 - ID update
-	@PatchMapping("/allocation/{id}")
-	public ResponseEntity<ShippingResponse<?>> allocationShipping(@PathVariable(name = "id") UUID id) {
+	// 슬랙 발송 API 테스트
+	@GetMapping("/slack/{orderId}")
+	public ResponseEntity<ShippingResponse<ShippingClientDataResponseDto>> sendSlackMessage(@PathVariable(name = "orderId") UUID orderId) {
 		return ResponseEntity.status(HttpStatus.OK)
 			.body(ShippingResponse.success(
 				HttpStatus.OK.value(),
-				shippingService.allocationShipping(id)));
+				shippingService.sendSlackMessage(orderId)));
 	}
 
 	// TODO: 권한 확인 - ALL + 담당 HUB, DVL_AGENT

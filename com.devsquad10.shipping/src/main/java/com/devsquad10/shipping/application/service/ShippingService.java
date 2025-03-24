@@ -19,6 +19,7 @@ import com.devsquad10.shipping.application.dto.request.ShippingUpdateReqDto;
 import com.devsquad10.shipping.application.dto.response.PagedShippingItemResDto;
 import com.devsquad10.shipping.application.dto.response.PagedShippingResDto;
 import com.devsquad10.shipping.application.dto.response.ShippingResDto;
+import com.devsquad10.shipping.application.exception.shipping.InvalidShippingStatusUpdateException;
 import com.devsquad10.shipping.application.exception.shipping.ShippingNotFoundException;
 import com.devsquad10.shipping.application.exception.shippingAgent.ShippingAgentAlreadyAllocatedException;
 import com.devsquad10.shipping.application.exception.shippingAgent.ShippingAgentNotAllocatedException;
@@ -39,6 +40,7 @@ import com.devsquad10.shipping.infrastructure.client.UserClient;
 import com.devsquad10.shipping.infrastructure.client.dto.HubFeignClientGetRequest;
 import com.devsquad10.shipping.infrastructure.client.dto.OrderFeignClientDto;
 import com.devsquad10.shipping.infrastructure.client.dto.ShippingClientDataRequestDto;
+import com.devsquad10.shipping.infrastructure.client.dto.ShippingClientDataResponseDto;
 import com.devsquad10.shipping.infrastructure.client.dto.UserInfoFeignClientResponse;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -64,13 +66,64 @@ public class ShippingService {
 	// TODO: 권한 확인 - MASTER, 담당 HUB, DVL_AGENT
 	//TODO: GPS + Geolocation 적용하여 배송 위치 추적에 따른 배송 경로기록 상태 이벤트 처리
 	// 그 결과를 바로 배송 상태로 update 처리
+	// 배송 상태(HUB_WAIT -> HUB_TRNS -> HUB_ARV -> COM_TRNS -> DLV_COMP)
 	@Caching(
 		put = {@CachePut(value = "shippingCache", key = "#id.toString", condition = "#id != null")},
 		evict = {@CacheEvict(cacheNames = "shippingSearchCache", allEntries = true)}
 	)
 	public ShippingResDto statusUpdateShipping(UUID id, ShippingUpdateReqDto shippingUpdateReqDto) {
-		Shipping shipping = shippingRepository.findByIdAndDeletedAtIsNull(id)
+		// 동시성 처리로 인해 비관적 락 적용하여 동시성 제어
+		Shipping shipping = shippingRepository.findByIdWithPessimisticLock(id)
 			.orElseThrow(() -> new ShippingNotFoundException("ID " + id + "에 해당하는 배송 데이터를 찾을 수 없습니다."));
+
+		// 배송 상태 변경 순서 정의
+		ShippingStatus[] statusOrder = {
+			ShippingStatus.HUB_WAIT,
+			ShippingStatus.HUB_TRNS,
+			ShippingStatus.HUB_ARV,
+			ShippingStatus.COM_TRNS,
+			ShippingStatus.DLV_CMP
+		};
+
+		// 현재 배송 상태의 순서
+		int currentStatusIndex = -1;
+		for (int i = 0; i < statusOrder.length; i++) {
+			if (shipping.getStatus() == statusOrder[i]) {
+				currentStatusIndex = i;
+				break;
+			}
+		}
+
+		// 요청된 배송 상태의 순서
+		int requestedStatusIndex = -1;
+		for (int i = 0; i < statusOrder.length; i++) {
+			if (shippingUpdateReqDto.getStatus() == statusOrder[i]) {
+				requestedStatusIndex = i;
+				break;
+			}
+		}
+
+		// 이전 상태로 업데이트 시도 시 예외 발생
+		if (requestedStatusIndex < currentStatusIndex) {
+			throw new InvalidShippingStatusUpdateException("이전 배송 상태로 업데이트할 수 없습니다.");
+		}
+
+		// 허브 대기 중 -> 허브 이동 중 : 주문 상태 'shipped'로 업데이트
+		if (shipping.getStatus() == ShippingStatus.HUB_WAIT && shippingUpdateReqDto.getStatus() == ShippingStatus.HUB_TRNS) {
+			log.info("id: {}, shipping.getId(): {}", id, shipping.getId());
+			orderClient.updateOrderStatusToShipped(id);
+			log.info("주문 상태 shipped로 변경 완료");
+		}
+
+		// 허브 도착 상태(HUB_ARV) 업데이트하면 업체배송담당자 할당 - ID update
+		if(shippingUpdateReqDto.getStatus() == ShippingStatus.HUB_ARV) {
+			ShippingResDto assignmentShipping = allocationShipping(id, shipping);
+			if(assignmentShipping == null) {
+				log.info("배정된 업체 배송 담당자 존재하지 않습니다.");
+				throw new ShippingAgentNotAllocatedException("배정된 업체 배송 담당자 존재하지 않습니다.");
+			}
+			log.info("companyShippingManagerId: {}", assignmentShipping.getCompanyShippingManagerId());
+		}
 
 		shipping.preUpdate();
 		return shippingRepository.save(shipping.toBuilder()
@@ -78,18 +131,8 @@ public class ShippingService {
 			.build()).toResponseDto();
 	}
 
-	// TODO: 배송 상태(HUB_ARV)가 되면 이벤트 처리로, 업체 배송담당자 할당(companyShippingManagerId update)
-	@Caching(
-		put = {@CachePut(value = "shippingCache", key = "#id.toString", condition = "#id != null")},
-		evict = {@CacheEvict(cacheNames = "shippingSearchCache", allEntries = true)}
-	)
-	//TODO: 배송 담당자 배정 처리(주문 생성 전송시간 기준으로 허브간 이동이 시작되었다고 가정)
-	// 전송시간+예상소요시간 기준
-	// 배송 경로기록 마지막 순번의 현재상태가 "목적지 허브 도착:HUB_ARV"일 때만 배정 가능
-	public ShippingResDto allocationShipping(UUID id) {
-		// 동시성 처리로 인해 비관적 락 적용하여 동시성 제어
-		Shipping shipping = shippingRepository.findByIdWithPessimisticLock(id)
-			.orElseThrow(() -> new ShippingNotFoundException("ID " + id + "에 해당하는 배송 데이터를 찾을 수 없습니다."));
+	// 배송 경로기록 마지막 순번의 현재상태가 "목적지 허브 도착:HUB_ARV"일 때만 업체 배송담당자 배정됨.
+	private ShippingResDto allocationShipping(UUID id, Shipping shipping) {
 
 		// 배송담당자 ID가 이미 배정된 경우 처리
 		if (shipping.getCompanyShippingManagerId() != null) {
@@ -104,18 +147,25 @@ public class ShippingService {
 			throw new ShippingAgentNotAllocatedException("배송 담당자 배정이 불가능합니다.");
 		}
 
-		// TODO: 테스트 후, 삭제(함께 슬랙 메시지 발송)
-		ShippingClientDataRequestDto responseDto = sendSlackNotification(shipping.getOrderId());
-		log.info("responseDto: {}", responseDto.getOrderId());
-
 		shipping.preUpdate();
 		return shippingRepository.save(shipping.toBuilder()
 			.companyShippingManagerId(allocationResult.getShippingManagerId())
 			.build()).toResponseDto();
 	}
 
-	private ShippingClientDataRequestDto sendSlackNotification(UUID orderId) {
-		ShippingClientDataRequestDto response = messageClient.getShippingClientData(orderId);
+	// 슬랙 발송 API 테스트
+	public ShippingClientDataResponseDto sendSlackMessage(UUID orderId) {
+		// TODO: 테스트 후, 삭제(함께 슬랙 메시지 발송)
+		log.info("서비스 시작");
+		ShippingClientDataResponseDto responseDto = sendSlackNotification(orderId);
+		log.info("서비스 끝 OrderId: {}", responseDto.getRecipientId());
+		return responseDto;
+	}
+
+	private ShippingClientDataResponseDto sendSlackNotification(UUID orderId) {
+		log.info("메시지 호출 전");
+		ShippingClientDataResponseDto response = messageClient.getShippingClientData(orderId);
+		log.info("메시지 호출 후");
 		if(response == null) {
 			throw new EntityNotFoundException("슬랙 메시지가 내용이 없습니다.");
 		}
@@ -228,6 +278,7 @@ public class ShippingService {
 		OrderFeignClientDto getOrder = orderClient.getOrderProductDetails(orderId);
 
 		// 배송담당자 id로 "이름, 슬랙ID" 정보 조회하는 User feign client 요청
+		log.info("shipping.getCompanyShippingManagerId(): {}", shipping.getCompanyShippingManagerId());
 		UserInfoFeignClientResponse shippingManagerInfo = userClient.getUserInfoRequest(shipping.getCompanyShippingManagerId());
 
 		return ShippingClientDataRequestDto.builder()
