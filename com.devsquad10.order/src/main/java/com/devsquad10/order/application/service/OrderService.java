@@ -11,9 +11,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.devsquad10.order.application.dto.OrderFeignClientDto;
 import com.devsquad10.order.application.dto.OrderReqDto;
 import com.devsquad10.order.application.dto.OrderResDto;
 import com.devsquad10.order.application.dto.OrderUpdateReqDto;
+import com.devsquad10.order.application.dto.PageOrderResponseDto;
 import com.devsquad10.order.application.dto.message.ShippingUpdateRequest;
 import com.devsquad10.order.application.dto.message.StockDecrementMessage;
 import com.devsquad10.order.application.dto.message.StockReversalMessage;
@@ -40,7 +42,7 @@ public class OrderService {
 	private final ShippingClient shippingClient;
 
 	@CachePut(cacheNames = "orderCache", key = "#result.id")
-	public OrderResDto createOrder(OrderReqDto orderReqDto) {
+	public OrderResDto createOrder(OrderReqDto orderReqDto, String userId) {
 		Order order = Order.builder()
 			.recipientsId(orderReqDto.getRecipientsId())
 			.productId(orderReqDto.getProductId())
@@ -48,6 +50,7 @@ public class OrderService {
 			.requestDetails(orderReqDto.getRequestDetails())
 			.deadLine(orderReqDto.getDeadLine())
 			.status(OrderStatus.ORDER_RECEIVED)
+			.createdBy(userId)
 			.build();
 
 		// DB에 저장
@@ -68,11 +71,13 @@ public class OrderService {
 
 	@Cacheable(cacheNames = "orderSearchCache", key = "#q + '-' + #category + '-' + #page + '-' + #size")
 	@Transactional(readOnly = true)
-	public Page<OrderResDto> searchOrders(String q, String category, int page, int size, String sort, String order) {
+	public PageOrderResponseDto searchOrders(String q, String category, int page, int size, String sort, String order) {
 
 		Page<Order> orderPages = orderQuerydslRepository.findAll(q, category, page, size, sort, order);
 
-		return orderPages.map(Order::toResponseDto);
+		Page<OrderResDto> orderResDtoPages = orderPages.map(Order::toResponseDto);
+
+		return PageOrderResponseDto.toResponse(orderResDtoPages);
 
 	}
 
@@ -80,7 +85,7 @@ public class OrderService {
 	@Caching(evict = {
 		@CacheEvict(cacheNames = "orderSearchCache", allEntries = true)
 	})
-	public OrderResDto updateOrder(UUID id, OrderUpdateReqDto orderUpdateReqDto) {
+	public OrderResDto updateOrder(UUID id, OrderUpdateReqDto orderUpdateReqDto, String userId) {
 
 		Order order = orderRepository.findByIdAndDeletedAtIsNull(id)
 			.orElseThrow(() -> new OrderNotFoundException("Order Not Found By Id : " + id));
@@ -93,7 +98,7 @@ public class OrderService {
 				companyClient.findRecipientAddressByCompanyId(orderUpdateReqDto.getRecipientsId());
 			if (newRecipientsAddress == null) {
 				throw new IllegalArgumentException(
-					"Invalid recipient address for recipientsId: " + orderUpdateReqDto.getRecipientsId());
+					"Invalid recipient address for recipientsId : " + orderUpdateReqDto.getRecipientsId());
 			}
 
 			order = order.toBuilder()
@@ -134,6 +139,7 @@ public class OrderService {
 		order = order.toBuilder()
 			.requestDetails(orderUpdateReqDto.getRequestDetails())  // 요청 사항 업데이트
 			.deadLine(orderUpdateReqDto.getDeadLine())              // 납품 기한일자 업데이트
+			.updatedBy(userId)
 			.build();
 
 		ShippingUpdateRequest shippingUpdateRequest = ShippingUpdateRequest.builder()
@@ -157,7 +163,7 @@ public class OrderService {
 		@CacheEvict(cacheNames = "orderCache", key = "#id"),
 		@CacheEvict(cacheNames = "orderSearchCache", key = "#id")
 	})
-	public void deleteOrder(UUID id) {
+	public void deleteOrder(UUID id, String userId) {
 		Order order = orderRepository.findByIdAndDeletedAtIsNull(id)
 			.orElseThrow(() -> new OrderNotFoundException("Order Not Found By Id : " + id));
 
@@ -169,7 +175,27 @@ public class OrderService {
 
 		orderRepository.save(order.toBuilder()
 			.deletedAt(LocalDateTime.now())
-			.deletedBy("사용자")
+			.deletedBy(userId)
 			.build());
+	}
+
+	public void updateOrderStatusToShipped(UUID shippingId) {
+		Order order = orderRepository.findByShippingIdAndDeletedAtIsNull(shippingId)
+			.orElseThrow(() -> new OrderNotFoundException(
+				"No order found with shippingId: " + shippingId + " and deletedAt is null"));
+
+		orderRepository.save(order.toBuilder()
+			.status(OrderStatus.SHIPPED)
+			.build());
+	}
+
+	public OrderFeignClientDto getOrderProductDetails(UUID id) {
+		Order order = orderRepository.findByIdAndDeletedAtIsNull(id)
+			.orElseThrow(() -> new OrderNotFoundException("Order Not Found By Id : " + id));
+
+		return OrderFeignClientDto.builder()
+			.productName(order.getProductName() != null ? order.getProductName() : null)
+			.quantity(order.getQuantity() != null ? order.getQuantity() : null)
+			.build();
 	}
 }

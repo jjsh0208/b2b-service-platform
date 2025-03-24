@@ -11,15 +11,16 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.devsquad10.company.application.client.HubClient;
 import com.devsquad10.company.application.dto.CompanyReqDto;
 import com.devsquad10.company.application.dto.CompanyResDto;
+import com.devsquad10.company.application.dto.PageCompanyResponseDto;
 import com.devsquad10.company.application.dto.ShippingCompanyInfoDto;
 import com.devsquad10.company.application.exception.CompanyNotFoundException;
 import com.devsquad10.company.domain.enums.CompanyTypes;
 import com.devsquad10.company.domain.model.Company;
 import com.devsquad10.company.domain.repository.CompanyQuerydslRepository;
 import com.devsquad10.company.domain.repository.CompanyRepository;
+import com.devsquad10.company.infrastructure.client.HubClient;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -51,6 +52,7 @@ public class CompanyService {
 			.hubId(hubId)
 			.address(companyReqDto.getAddress())
 			.type(companyReqDto.getType())
+			.createdBy(userId)
 			.build()).toResponseDto();
 	}
 
@@ -64,12 +66,14 @@ public class CompanyService {
 
 	@Cacheable(cacheNames = "companySearchCache", key = "#q + '-' + #category + '-' + #page + '-' + #size")
 	@Transactional(readOnly = true)
-	public Page<CompanyResDto> searchCompanies(String q, String category, int page, int size, String sort,
+	public PageCompanyResponseDto searchCompanies(String q, String category, int page, int size, String sort,
 		String order) {
 
 		Page<Company> companyPages = companyQuerydslRepository.findAll(q, category, page, size, sort, order);
 
-		return companyPages.map(Company::toResponseDto);
+		Page<CompanyResDto> companyResDtdPages = companyPages.map(Company::toResponseDto);
+
+		return PageCompanyResponseDto.toResponse(companyResDtdPages);
 
 	}
 
@@ -77,7 +81,7 @@ public class CompanyService {
 	@Caching(evict = {
 		@CacheEvict(cacheNames = "companySearchCache", allEntries = true)
 	})
-	public CompanyResDto updateCompany(UUID id, CompanyReqDto companyReqDto) {
+	public CompanyResDto updateCompany(UUID id, CompanyReqDto companyReqDto, String userId) {
 		Company targetCompany = companyRepository.findByIdAndDeletedAtIsNull(id)
 			.orElseThrow(() -> new CompanyNotFoundException("Company Not Found By  Id : " + id));
 
@@ -94,7 +98,7 @@ public class CompanyService {
 			.address(companyReqDto.getAddress())
 			.type(companyReqDto.getType())
 			.updatedAt(LocalDateTime.now())
-			.updatedBy("사용자")
+			.updatedBy(userId)
 			.build()).toResponseDto();
 	}
 
@@ -102,13 +106,13 @@ public class CompanyService {
 		@CacheEvict(cacheNames = "companyCache", key = "#id"),
 		@CacheEvict(cacheNames = "companySearchCache", key = "#id")
 	})
-	public void deleteCompany(UUID id) {
+	public void deleteCompany(UUID id, String userId) {
 		Company targetCompany = companyRepository.findByIdAndDeletedAtIsNull(id)
 			.orElseThrow(() -> new CompanyNotFoundException("Company Not Found By  Id : " + id));
 
 		companyRepository.save(targetCompany.toBuilder()
 			.deletedAt(LocalDateTime.now())
-			.deletedBy("사용자")
+			.deletedBy(userId)
 			.build());
 	}
 

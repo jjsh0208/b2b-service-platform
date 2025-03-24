@@ -28,7 +28,7 @@ public class QShipping extends EntityPathBase<Shipping> {
 
     public final StringPath createdBy = createString("createdBy");
 
-    public final StringPath deadLine = createString("deadLine");
+    public final DateTimePath<java.util.Date> deadLine = createDateTime("deadLine", java.util.Date.class);
 
     public final DateTimePath<java.time.LocalDateTime> deletedAt = createDateTime("deletedAt", java.time.LocalDateTime.class);
 

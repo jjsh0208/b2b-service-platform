@@ -2,7 +2,6 @@ package com.devsquad10.company.presentation.controller;
 
 import java.util.UUID;
 
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -18,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.devsquad10.company.application.dto.CompanyReqDto;
 import com.devsquad10.company.application.dto.CompanyResDto;
+import com.devsquad10.company.application.dto.PageCompanyResponseDto;
 import com.devsquad10.company.application.dto.ShippingCompanyInfoDto;
 import com.devsquad10.company.application.dto.response.CompanyResponse;
 import com.devsquad10.company.application.service.CompanyService;
@@ -47,7 +47,7 @@ public class CompanyController {
 	}
 
 	@GetMapping("/search")
-	public ResponseEntity<CompanyResponse<Page<CompanyResDto>>> searchCompanies(
+	public ResponseEntity<CompanyResponse<PageCompanyResponseDto>> searchCompanies(
 		@RequestParam(required = false) String q,
 		@RequestParam(required = false) String category,
 		@RequestParam(defaultValue = "0") int page,
@@ -63,14 +63,16 @@ public class CompanyController {
 
 	@PatchMapping("/{id}")
 	public ResponseEntity<CompanyResponse<CompanyResDto>> updateCompany(@PathVariable("id") UUID id,
-		@RequestBody CompanyReqDto companyReqDto) {
+		@RequestBody CompanyReqDto companyReqDto, @RequestHeader("X-User-Id") String userId) {
 		return ResponseEntity.status(HttpStatus.OK)
-			.body(CompanyResponse.success(HttpStatus.OK.value(), companyService.updateCompany(id, companyReqDto)));
+			.body(CompanyResponse.success(HttpStatus.OK.value(),
+				companyService.updateCompany(id, companyReqDto, userId)));
 	}
 
 	@DeleteMapping("/{id}")
-	public ResponseEntity<CompanyResponse<String>> deleteCompany(@PathVariable("id") UUID id) {
-		companyService.deleteCompany(id);
+	public ResponseEntity<CompanyResponse<String>> deleteCompany(@PathVariable("id") UUID id,
+		@RequestHeader("X-User-Id") String userId) {
+		companyService.deleteCompany(id, userId);
 		return ResponseEntity.status(HttpStatus.OK)
 			.body(CompanyResponse.success(HttpStatus.OK.value(), "Company Deleted successfully"));
 	}

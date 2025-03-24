@@ -68,8 +68,10 @@ public class UserService {
 
 		if (user.getRole() == UserRoleEnum.DVL_OFFICER) {
 			ShippingAgentFeignClientPostRequest shippingRequest = new ShippingAgentFeignClientPostRequest();
-			shippingRequest.setId(user.getId());
+			shippingRequest.setShippingManagerId(user.getId());
 			shippingRequest.setSlackId(user.getSlackId());
+			shippingRequest.setType(requestDto.getType());
+			shippingRequest.setHubId(requestDto.getHubId());
 
 			shippingClient.createShippingAgent(shippingRequest);
 		}
@@ -144,6 +146,10 @@ public class UserService {
 		User user = (User)userRepository.findByIdAndDeletedAtIsNull(id)
 			.orElseThrow(() -> new IllegalArgumentException("가입되지 않은 사용자입니다."));
 
+		if (user.getRole() == UserRoleEnum.DVL_OFFICER) {
+			shippingClient.deleteShippingAgentForUser(id);
+		}
+
 		user.delete(id);
 		userRepository.save(user);
 	}
@@ -174,5 +180,13 @@ public class UserService {
 		log.info("유저 정보 조회 완료");
 		UserInfoFeignClientResponse userInfo = new UserInfoFeignClientResponse(user.getUsername(), user.getSlackId());
 		return userInfo;
+	}
+
+	public String getUserSlackId(UUID userId) {
+		log.info("유저 슬랙 ID 조회");
+		User user = (User)userRepository.findByIdAndDeletedAtIsNull(userId)
+			.orElseThrow(() -> new IllegalArgumentException("가입되지 않은 사용자입니다."));
+		log.info("유저 슬랙 ID 조회 완료");
+		return user.getSlackId();
 	}
 }

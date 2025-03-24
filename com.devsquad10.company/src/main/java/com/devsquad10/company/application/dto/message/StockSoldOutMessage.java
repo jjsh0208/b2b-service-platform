@@ -18,7 +18,7 @@ public class StockSoldOutMessage {
 
 	private UUID supplierId;
 
-	private UUID productId;
+	private String productName;
 
 	private Date soldOutAt;
 }

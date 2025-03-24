@@ -122,17 +122,28 @@ public class ShippingAgent {
 			.type(type)
 			.shippingSequence(shippingSequence)
 			.isTransit(isTransit)
+			.assignmentCount(assignmentCount)
 			.build();
 	}
 
-	public Integer increaseAssignmentCount() {
+	public void increaseAssignmentCount() {
 		if (assignmentCount == null) {
 			assignmentCount = 0;
 		}
-		return ++assignmentCount;
+		assignmentCount++;
+	}
+	public void decreaseAssignmentCount() {
+		if (assignmentCount <= 0) {
+			assignmentCount = 0;
+		}
+		assignmentCount--;
 	}
 
 	public void updateIsTransit() {
 		this.isTransit = true;
+	}
+
+	public void isTransitToFalse() {
+		this.isTransit = false;
 	}
 }

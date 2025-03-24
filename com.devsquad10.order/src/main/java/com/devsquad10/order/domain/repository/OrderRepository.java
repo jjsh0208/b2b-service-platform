@@ -11,4 +11,7 @@ public interface OrderRepository {
 
 	Order save(Order order);
 
+	// shippingId로 deletedAt이 null인 Order를 찾는 메서드
+	Optional<Order> findByShippingIdAndDeletedAtIsNull(UUID shippingId);
+
 }
