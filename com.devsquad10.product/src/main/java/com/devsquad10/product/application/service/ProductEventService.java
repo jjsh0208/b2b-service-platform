@@ -35,22 +35,21 @@ public class ProductEventService {
 		UUID targetProductId = stockDecrementMessage.getProductId();
 		int orderQuantity = stockDecrementMessage.getQuantity();
 
-		// 1. 재고 차감 시도
-		int updatedRow = productRepository.decreaseStock(targetProductId, orderQuantity);
-
-		Product product = productRepository.findByIdAndDeletedAtIsNull(targetProductId)
+		Product product = productRepository.findByIdWithLock(targetProductId)
 			.orElseThrow(() -> new ProductNotFoundException("Product Not Found By Id :" + targetProductId));
 
 		// 2. 재고 부족 처리
-		if (updatedRow == 0) {
+		if (product.getQuantity() < orderQuantity) {
 			sendStockUpdateMessage(stockDecrementMessage, product, "OUT_OF_STOCK");
 			return;
 		}
 
+		product.decreaseStock(orderQuantity);
+
 		if (product.getQuantity() == 0) {
 			product.statusSoldOut();
 			productRepository.save(product);
-			
+
 			StockSoldOutMessage stockSoldOutMessage = new StockSoldOutMessage(product.getSupplierId(), product.getId(),
 				new Date());
 			rabbitTemplate.convertAndSend(queueStockSoldOut, stockSoldOutMessage);

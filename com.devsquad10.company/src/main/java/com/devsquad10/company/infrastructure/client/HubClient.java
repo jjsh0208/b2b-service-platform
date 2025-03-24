@@ -1,4 +1,4 @@
-package com.devsquad10.company.application.client;
+package com.devsquad10.company.infrastructure.client;
 
 import java.util.UUID;
 

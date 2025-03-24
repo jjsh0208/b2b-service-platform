@@ -12,7 +12,7 @@ import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import com.devsquad10.shipping.application.dto.message.ShippingCreateResponse;
+import com.devsquad10.shipping.application.dto.message.ShippingResponseMessage;
 import com.devsquad10.shipping.application.dto.response.ShippingResDto;
 import com.devsquad10.shipping.domain.enums.ShippingStatus;
 
@@ -82,8 +82,6 @@ public class Shipping {
 
 	@Column
 	private Date deadLine;
-	// @Column
-	// private String deadLine;
 
 	@OneToMany(mappedBy = "shipping", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	private List<ShippingHistory> historyList = new ArrayList<>();
@@ -143,8 +141,8 @@ public class Shipping {
 		);
 	}
 
-	public ShippingCreateResponse toShippingCreateMessage() {
-		return ShippingCreateResponse.builder()
+	public ShippingResponseMessage toShippingResponseMessage() {
+		return ShippingResponseMessage.builder()
 			.shippingId(this.id)
 			.orderId(this.orderId)
 			.status("SUCCESS")

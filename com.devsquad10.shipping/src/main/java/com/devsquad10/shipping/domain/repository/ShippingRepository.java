@@ -24,4 +24,7 @@ public interface ShippingRepository {
 	Optional<Shipping> findByIdWithPessimisticLock(@Param("id") UUID id);
 
 	Page<Shipping> findAll(String q, String category, int page, int size, String sort, String order);
+
+	// 주문Id로 배송 조회
+	Optional<Shipping> findByOrderIdAndDeletedAtIsNull(UUID orderId);
 }

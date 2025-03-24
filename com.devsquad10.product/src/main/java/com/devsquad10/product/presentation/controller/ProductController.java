@@ -2,7 +2,6 @@ package com.devsquad10.product.presentation.controller;
 
 import java.util.UUID;
 
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -15,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.devsquad10.product.application.dto.PageProductResponseDto;
 import com.devsquad10.product.application.dto.ProductReqDto;
 import com.devsquad10.product.application.dto.ProductResDto;
 import com.devsquad10.product.application.dto.response.ProductResponse;
@@ -45,7 +45,7 @@ public class ProductController {
 	}
 
 	@GetMapping("/search")
-	public ResponseEntity<ProductResponse<Page<ProductResDto>>> searchProducts(
+	public ResponseEntity<ProductResponse<PageProductResponseDto>> searchProducts(
 		@RequestParam(required = false) String q,
 		@RequestParam(required = false) String category,
 		@RequestParam(defaultValue = "0") int page,
