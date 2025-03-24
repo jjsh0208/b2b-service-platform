@@ -1,6 +1,5 @@
 package com.devsquad10.shipping.infrastructure.config.scheduling;
 
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -12,17 +11,21 @@ import com.devsquad10.shipping.domain.repository.ShippingRepository;
 import com.devsquad10.shipping.infrastructure.client.MessageClient;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 @AllArgsConstructor
-public class SendSlackMessage {
+public class SendSlackMessageScheduler {
 
 	private final ShippingRepository shippingRepository;
 	private final MessageClient messageClient;
 
-	@Scheduled(cron = "0 0 6 * * *")
-	public void sendDailySlackNotification(Date deadLine) {
-		List<Shipping> dailyDeadLines = shippingRepository.findShippingWithDeadlineToday(deadLine);
+	// @Scheduled(cron = "0 0 6 * * *") // 매일 오전 6시
+	// @Scheduled(cron = "* */1 * * * *") // 테스트용 1분 마다
+	public void sendDailySlackNotification() {
+		List<Shipping> dailyDeadLines = shippingRepository.findShippingWithDeadlineToday();
+		log.info("dailyDeadLines.size(): {}", dailyDeadLines.size());
 		for(Shipping shipping : dailyDeadLines) {
 			sendSlackNotification(shipping.getOrderId());
 		}
