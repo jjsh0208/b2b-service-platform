@@ -26,6 +26,7 @@ import com.devsquad10.shipping.domain.repository.ShippingHistoryRepository;
 import com.devsquad10.shipping.domain.repository.ShippingRepository;
 import com.devsquad10.shipping.infrastructure.client.CompanyClient;
 import com.devsquad10.shipping.infrastructure.client.HubClient;
+import com.devsquad10.shipping.infrastructure.client.HubRouteClient;
 import com.devsquad10.shipping.infrastructure.client.dto.HubFeignClientGetRequest;
 import com.devsquad10.shipping.infrastructure.client.dto.ShippingCompanyInfoDto;
 import com.devsquad10.shipping.infrastructure.client.UserClient;
@@ -49,6 +50,7 @@ public class ShippingEventService {
 	private final ShippingAgentAllocation shippingAgentAllocation;
 	private final ShippingMessageService shippingMessageService;
 	private final HubClient hubClient;
+	private final HubRouteClient hubRouteClient;
 	private final CompanyClient companyClient;
 	private final UserClient userClient;
 
@@ -152,7 +154,7 @@ public class ShippingEventService {
 		ShippingCreateMessage shippingCreateMessage) {
 
 		try {
-			List<HubFeignClientGetRequest> hubRouteInfo = hubClient.getHubRouteInfo(supplierIdInfo.getHubId(),
+			List<HubFeignClientGetRequest> hubRouteInfo = hubRouteClient.getHubRouteInfo(supplierIdInfo.getHubId(),
 				recipientsInfo.getHubId());
 			log.info("husRouteInfo.size(): {}", hubRouteInfo.size());
 
@@ -327,7 +329,7 @@ public class ShippingEventService {
 		ShippingUpdateMessage shippingUpdateMessage) {
 
 		try {
-			List<HubFeignClientGetRequest> hubRouteUpdateInfo = hubClient.getHubRouteInfo(departureHubId,
+			List<HubFeignClientGetRequest> hubRouteUpdateInfo = hubRouteClient.getHubRouteInfo(departureHubId,
 				recipientsInfo.getHubId());
 			log.info("hubRouteUpdateInfo.size(): {}", hubRouteUpdateInfo.size());
 

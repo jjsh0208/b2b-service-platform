@@ -32,6 +32,7 @@ import com.devsquad10.shipping.domain.repository.ShippingAgentRepository;
 import com.devsquad10.shipping.domain.repository.ShippingHistoryRepository;
 import com.devsquad10.shipping.domain.repository.ShippingRepository;
 import com.devsquad10.shipping.infrastructure.client.HubClient;
+import com.devsquad10.shipping.infrastructure.client.HubRouteClient;
 import com.devsquad10.shipping.infrastructure.client.OrderClient;
 import com.devsquad10.shipping.infrastructure.client.UserClient;
 import com.devsquad10.shipping.infrastructure.client.dto.HubFeignClientGetRequest;
@@ -53,6 +54,7 @@ public class ShippingService {
 	private final ShippingAgentRepository shippingAgentRepository;
 	private final ShippingAgentAllocation shippingAgentAllocation;
 	private final HubClient hubClient;
+	private final HubRouteClient hubRouteClient;
 	private final UserClient userClient;
 	private final OrderClient orderClient;
 
@@ -186,7 +188,7 @@ public class ShippingService {
 		Shipping shipping = shippingRepository.findByOrderIdAndDeletedAtIsNull(orderId)
 			.orElseThrow(() -> new ShippingNotFoundException("배송 내역에서 해당하는 주문 ID: " + orderId + "가 존재하지 않습니다."));
 
-		List<HubFeignClientGetRequest> getHubRoutes = hubClient.getHubRouteInfo(
+		List<HubFeignClientGetRequest> getHubRoutes = hubRouteClient.getHubRouteInfo(
 			shipping.getDepartureHubId(),
 			shipping.getDestinationHubId()
 		);
