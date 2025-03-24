@@ -1,5 +1,7 @@
 package com.devsquad10.shipping.application.service;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
@@ -29,6 +31,13 @@ import com.devsquad10.shipping.domain.model.ShippingHistory;
 import com.devsquad10.shipping.domain.repository.ShippingAgentRepository;
 import com.devsquad10.shipping.domain.repository.ShippingHistoryRepository;
 import com.devsquad10.shipping.domain.repository.ShippingRepository;
+import com.devsquad10.shipping.infrastructure.client.HubClient;
+import com.devsquad10.shipping.infrastructure.client.OrderClient;
+import com.devsquad10.shipping.infrastructure.client.UserClient;
+import com.devsquad10.shipping.infrastructure.client.dto.HubFeignClientGetRequest;
+import com.devsquad10.shipping.infrastructure.client.dto.OrderFeignClientDto;
+import com.devsquad10.shipping.infrastructure.client.dto.ShippingClientData;
+import com.devsquad10.shipping.infrastructure.client.dto.UserInfoFeignClientRequest;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +52,9 @@ public class ShippingService {
 	private final ShippingHistoryRepository shippingHistoryRepository;
 	private final ShippingAgentRepository shippingAgentRepository;
 	private final ShippingAgentAllocation shippingAgentAllocation;
+	private final HubClient hubClient;
+	private final UserClient userClient;
+	private final OrderClient orderClient;
 
 	// TODO: 권한 확인 - MASTER, 담당 HUB, DVL_AGENT
 	//TODO: GPS + Geolocation 적용하여 배송 위치 추적에 따른 배송 경로기록 상태 이벤트 처리
@@ -156,5 +168,62 @@ public class ShippingService {
 			shippingRepository.save(shipping.softDelete());
 			return true;
 		}
+	}
+
+	// AI API 배송 데이터 검증
+	public Boolean isShippingDataExists(UUID orderId) {
+		Shipping shipping = shippingRepository.findByOrderIdAndDeletedAtIsNull(orderId)
+			.orElseThrow(() -> new ShippingNotFoundException("배송 내역에서 해당하는 주문 ID: " + orderId + "가 존재하지 않습니다."));
+		if(shipping == null) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+
+	// AI 슬랙 알림 전송용 배송 데이터 요청
+	public ShippingClientData getShippingClientData(UUID orderId) {
+		Shipping shipping = shippingRepository.findByOrderIdAndDeletedAtIsNull(orderId)
+			.orElseThrow(() -> new ShippingNotFoundException("배송 내역에서 해당하는 주문 ID: " + orderId + "가 존재하지 않습니다."));
+
+		List<HubFeignClientGetRequest> getHubRoutes = hubClient.getHubRouteInfo(
+			shipping.getDepartureHubId(),
+			shipping.getDestinationHubId()
+		);
+		getHubRoutes.sort(Comparator.comparing(HubFeignClientGetRequest::getSequence));
+
+		List<UUID> waypoints = new ArrayList<>();
+		for (HubFeignClientGetRequest hubRoute : getHubRoutes) {
+			waypoints.add(hubRoute.getDestinationHubId());
+		}
+
+		// 허브Id로 "허브명" 조회하는 Hub feign client 요청
+		String departureHubName = hubClient.getHubName(shipping.getDepartureHubId());
+		String destinationHubName = hubClient.getHubName(shipping.getDestinationHubId());
+
+		List<String> waypointNames = new ArrayList<>();
+		for(UUID waypointId : waypoints) {
+			String waypointName = hubClient.getHubName(waypointId);
+			waypointNames.add(waypointName);
+		}
+
+		// 주문Id로 "상품명, 수량" 조회하는 Order feign client 요청
+		OrderFeignClientDto getOrder = orderClient.getOrder(orderId);
+
+		// 배송담당자 id로 "이름, 슬랙ID" 정보 조회하는 User feign client 요청
+		UserInfoFeignClientRequest shippingManagerInfo = userClient.getUserInfoRequest(shipping.getCompanyShippingManagerId()).toRequest();
+
+		return ShippingClientData.builder()
+			.orderId(shipping.getOrderId())
+			.customerName(shipping.getRecipientName())
+			.productInfo(getOrder.getProductName())
+			.quantity(getOrder.getQuantity())
+			.requestDetails(shipping.getRequestDetails())
+			.departureHubName(departureHubName)
+			.destinationHubName(destinationHubName)
+			.waypointHubNames(waypointNames)
+			.shippingManagerName(shippingManagerInfo.getUsername())
+			.shippingManagerSlackId(shippingManagerInfo.getSlackId())
+			.build();
 	}
 }

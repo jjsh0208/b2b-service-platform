@@ -19,6 +19,7 @@ import com.devsquad10.shipping.application.dto.request.ShippingUpdateReqDto;
 import com.devsquad10.shipping.application.dto.response.PagedShippingResDto;
 import com.devsquad10.shipping.application.dto.response.ShippingResDto;
 import com.devsquad10.shipping.application.service.ShippingService;
+import com.devsquad10.shipping.infrastructure.client.dto.ShippingClientData;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -44,7 +45,7 @@ public class ShippingController {
 
 	}
 
-	// 업체배송담당자 할당 - ID update
+	// 상태(HUB_ARV) 변경 시, 업체배송담당자 할당 - ID update
 	@PatchMapping("/allocation/{id}")
 	public ResponseEntity<ShippingResponse<?>> allocationShipping(@PathVariable(name = "id") UUID id) {
 		return ResponseEntity.status(HttpStatus.OK)
@@ -84,5 +85,17 @@ public class ShippingController {
 	public boolean deleteShippingForOrder(
 		@PathVariable(name = "orderId") UUID orderId) {
 		return shippingService.deleteShippingForOrder(orderId);
+	}
+
+	// AI API 배송 데이터 검증
+	@GetMapping("/exists/{uuid}")
+	public Boolean isShippingDataExists(@PathVariable(name = "orderId") UUID orderId) {
+		return shippingService.isShippingDataExists(orderId);
+	}
+
+	// AI 슬랙 알림 전송용 배송 데이터 요청
+	@GetMapping("/delivery-notification-data/{orderId}")
+	public ShippingClientData getShippingClientData(@PathVariable(name = "orderId") UUID orderId) {
+		return shippingService.getShippingClientData(orderId);
 	}
 }

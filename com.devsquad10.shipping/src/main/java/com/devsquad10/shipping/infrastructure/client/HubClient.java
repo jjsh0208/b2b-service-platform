@@ -23,4 +23,8 @@ public interface HubClient {
 		@PathVariable("departureHubId") UUID departureHubId,
 		@PathVariable("destinationHubId") UUID destinationHubId
 	);
+
+	// 허브Id로 "허브명" 조회하는 Hub feign client 요청
+	@GetMapping("/shipping/{id}")
+	String getHubName(@PathVariable(name = "id") UUID id);
 }

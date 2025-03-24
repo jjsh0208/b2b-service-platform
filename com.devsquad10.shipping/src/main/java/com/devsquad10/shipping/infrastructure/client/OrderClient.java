@@ -1,0 +1,16 @@
+package com.devsquad10.shipping.infrastructure.client;
+
+import java.util.UUID;
+
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+
+import com.devsquad10.shipping.infrastructure.client.dto.OrderFeignClientDto;
+
+@FeignClient(name = "order", url = "http://localhost:19096/api/order")
+public interface OrderClient{
+
+	@GetMapping("shipping/{orderId}")
+	OrderFeignClientDto getOrder(@PathVariable(name = "orderId") UUID orderId);
+}
