@@ -1,5 +1,6 @@
 package com.devsquad10.hub.presentation.controller;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
@@ -23,6 +24,7 @@ import com.devsquad10.hub.application.dto.res.HubRouteGetOneResponseDto;
 import com.devsquad10.hub.application.dto.res.HubRouteUpdateResponseDto;
 import com.devsquad10.hub.application.dto.res.PagedHubRouteResponseDto;
 import com.devsquad10.hub.application.service.HubRouteService;
+import com.devsquad10.hub.infrastructure.client.dto.HubFeignClientGetRequest;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -97,5 +99,15 @@ public class HubRouteController {
 				HttpStatus.OK.value(),
 				response
 			));
+	}
+
+	@GetMapping("/info/{departureHubId}/{destinationHubId}")
+	public List<HubFeignClientGetRequest> getHubRouteInfo(
+		@PathVariable("departureHubId") UUID departureHubId,
+		@PathVariable("destinationHubId") UUID destinationHubId
+	) {
+
+		return hubRouteService.getHubRouteInfo(
+			departureHubId, destinationHubId);
 	}
 }
