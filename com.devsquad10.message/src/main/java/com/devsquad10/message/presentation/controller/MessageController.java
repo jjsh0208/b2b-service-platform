@@ -25,7 +25,7 @@ import com.devsquad10.message.application.dto.res.MessageUpdateResponseDto;
 import com.devsquad10.message.application.dto.res.PagedMessageResponseDto;
 import com.devsquad10.message.application.service.MessageService;
 import com.devsquad10.message.application.service.SlackService;
-import com.devsquad10.message.infrastructure.client.dto.ShippingClientDataResponseDto;
+import com.devsquad10.message.infrastructure.client.dto.SoldOutMessageRequest;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -112,6 +112,13 @@ public class MessageController {
 	@GetMapping("/shipping-time/{orderId}")
 	ShippingClientDataResponseDto getShippingClientData(@PathVariable(name = "orderId") UUID orderId) {
 		return slackService.sendShippingTimeNotification(orderId);
+	}
+
+	@PostMapping("/stock-depletion")
+	public void sendSoldOutMessage(
+		@RequestBody SoldOutMessageRequest request
+	) {
+		slackService.sendSoldOutNotification(request);
 	}
 }
 

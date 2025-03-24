@@ -180,4 +180,28 @@ public class SlackService {
 
 		return ShippingClientDataResponseDto.fromEntity(savedMessage);
 	}
+
+	@Transactional
+	public void sendSoldOutNotification(SoldOutMessageRequest request) {
+		String formattedMessage = String.format(
+			"\n🔹 상품명: %s\n📅 재고 소진 일자: %s\n⚠ 알림: 해당 상품의 재고가 모두 소진되었습니다. 빠른 조치 바랍니다.",
+			request.getProductName(),
+			request.getSoldOutAt()
+		);
+
+		Message message = Message.builder()
+			.message(formattedMessage)
+			.recipientId(request.getVenderSlackId())
+			.build();
+
+		messageRepository.save(message);
+
+		SlackMessageRequestDto slackRequest = SlackMessageRequestDto.builder()
+			.receiverId(request.getVenderSlackId())
+			.message(formattedMessage)
+			.channel("#message")
+			.build();
+
+		sendMessage(slackRequest);
+	}
 }
