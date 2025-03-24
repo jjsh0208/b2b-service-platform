@@ -19,7 +19,7 @@ import com.devsquad10.shipping.application.dto.request.ShippingUpdateReqDto;
 import com.devsquad10.shipping.application.dto.response.PagedShippingResDto;
 import com.devsquad10.shipping.application.dto.response.ShippingResDto;
 import com.devsquad10.shipping.application.service.ShippingService;
-import com.devsquad10.shipping.infrastructure.client.dto.ShippingClientData;
+import com.devsquad10.shipping.infrastructure.client.dto.ShippingClientDataResponseDto;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -94,7 +94,7 @@ public class ShippingController {
 
 	// AI 슬랙 알림 전송용 배송 데이터 요청
 	@GetMapping("/delivery-notification-data/{orderId}")
-	public ShippingClientData getShippingClientData(@PathVariable(name = "orderId") UUID orderId) {
+	public ShippingClientDataResponseDto getShippingClientData(@PathVariable(name = "orderId") UUID orderId) {
 		return shippingService.getShippingClientData(orderId);
 	}
 }

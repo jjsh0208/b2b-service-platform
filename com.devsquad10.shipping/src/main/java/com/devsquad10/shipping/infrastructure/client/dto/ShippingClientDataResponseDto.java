@@ -14,7 +14,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ShippingClientData {
+public class ShippingClientDataResponseDto {
 	// 주문 ID
 	private UUID orderId;
 	// 주문자 이름
@@ -31,8 +31,8 @@ public class ShippingClientData {
 	private List<String> waypointHubNames;
 	// 허브 도착지
 	private String destinationHubName;
+	// 배송지 주소
+	private String address;
 	// 배송 담당자
 	private String shippingManagerName;
-	// 배송 담당자 Slack Id
-	private String shippingManagerSlackId;
 }

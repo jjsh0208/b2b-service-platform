@@ -38,9 +38,10 @@ import com.devsquad10.shipping.infrastructure.client.OrderClient;
 import com.devsquad10.shipping.infrastructure.client.UserClient;
 import com.devsquad10.shipping.infrastructure.client.dto.HubFeignClientGetRequest;
 import com.devsquad10.shipping.infrastructure.client.dto.OrderFeignClientDto;
-import com.devsquad10.shipping.infrastructure.client.dto.ShippingClientData;
+import com.devsquad10.shipping.infrastructure.client.dto.ShippingClientDataResponseDto;
 import com.devsquad10.shipping.infrastructure.client.dto.UserInfoFeignClientResponse;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -113,9 +114,11 @@ public class ShippingService {
 	}
 
 	private void sendSlackNotification(UUID orderId) {
-		messageClient.generateAndSendShippingTimeMessage(orderId);
+		ShippingClientDataResponseDto response = messageClient.getShippingClientData(orderId);
+		if(response == null) {
+			throw new EntityNotFoundException("슬랙 메시지가 내용이 없습니다.");
+		}
 	}
-
 
 	// TODO: 권한 확인 - ALL + 담당 HUB, DVL_AGENT
 	@Transactional(readOnly = true)
@@ -194,7 +197,7 @@ public class ShippingService {
 	}
 
 	// AI 슬랙 알림 전송용 배송 데이터 요청
-	public ShippingClientData getShippingClientData(UUID orderId) {
+	public ShippingClientDataResponseDto getShippingClientData(UUID orderId) {
 		Shipping shipping = shippingRepository.findByOrderIdAndDeletedAtIsNull(orderId)
 			.orElseThrow(() -> new ShippingNotFoundException("배송 내역에서 해당하는 주문 ID: " + orderId + "가 존재하지 않습니다."));
 
@@ -225,17 +228,17 @@ public class ShippingService {
 		// 배송담당자 id로 "이름, 슬랙ID" 정보 조회하는 User feign client 요청
 		UserInfoFeignClientResponse shippingManagerInfo = userClient.getUserInfoRequest(shipping.getCompanyShippingManagerId());
 
-		return ShippingClientData.builder()
+		return ShippingClientDataResponseDto.builder()
 			.orderId(shipping.getOrderId())
 			.customerName(shipping.getRecipientName())
 			.productInfo(getOrder.getProductName())
 			.quantity(getOrder.getQuantity())
 			.requestDetails(shipping.getRequestDetails())
 			.departureHubName(departureHubName)
-			.destinationHubName(destinationHubName)
 			.waypointHubNames(waypointNames)
+			.destinationHubName(destinationHubName)
+			.address(shipping.getAddress())
 			.shippingManagerName(shippingManagerInfo.getUsername())
-			.shippingManagerSlackId(shippingManagerInfo.getSlackId())
 			.build();
 	}
 }
