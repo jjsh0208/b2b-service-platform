@@ -15,13 +15,14 @@ import org.springframework.web.client.RestClient;
 import com.devsquad10.message.application.dto.req.SlackIncomingHookDto;
 import com.devsquad10.message.application.dto.req.SlackMessageRequestDto;
 import com.devsquad10.message.application.dto.res.MessageResponseDto;
-import com.devsquad10.message.application.exception.MessageProcessingException;
 import com.devsquad10.message.application.exception.SlackApiException;
 import com.devsquad10.message.application.exception.SlackUserNotFoundException;
 import com.devsquad10.message.domain.model.Message;
 import com.devsquad10.message.domain.repository.MessageRepository;
 import com.devsquad10.message.infrastructure.client.ShippingClient;
-import com.devsquad10.message.infrastructure.client.dto.ShippingClientData;
+import com.devsquad10.message.infrastructure.client.dto.ShippingClientDataRequestDto;
+import com.devsquad10.message.infrastructure.client.dto.ShippingClientDataResponseDto;
+import com.devsquad10.message.infrastructure.client.dto.SoldOutMessageRequest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -86,11 +87,6 @@ public class SlackService {
 	public String getSlackUserIdByUsername(String username) {
 		String url = "https://slack.com/api/users.list";
 
-		// Slack API에 요청을 보낼 헤더 설정
-		HttpHeaders headers = new HttpHeaders();
-		headers.set("Authorization", "Bearer " + slackOAuthToken);
-		HttpEntity<String> entity = new HttpEntity<>(headers);
-
 		// Slack API 호출
 		String responseBody = restClient.get()
 			.uri(url)
@@ -149,38 +145,59 @@ public class SlackService {
 
 	// TODO : 동작 검증 필요
 	@Transactional
-	public MessageResponseDto sendShippingTimeNotification(UUID orderId) {
-		try {
-			// 배송 정보 조회
-			ShippingClientData shippingData = shippingClient.getShippingClientData(orderId);
+	public ShippingClientDataResponseDto sendShippingTimeNotification(UUID orderId) {
 
-			if (shippingData == null) {
-				throw new EntityNotFoundException("주문 ID에 해당하는 배송 정보를 찾을 수 없습니다: " + orderId);
-			}
+		// 배송 정보 조회
+		ShippingClientDataRequestDto shippingData = shippingClient.getShippingClientData(orderId);
 
-			// AiService를 통한 메시지 생성
-			String generatedMessage = aiService.generateShippingTimeMessage(shippingData);
-
-			// 메시지 저장
-			Message message = Message.builder()
-				.message(generatedMessage)
-				.recipientId(shippingData.getShippingManagerSlackId())
-				.build();
-
-			Message savedMessage = messageRepository.save(message);
-
-			// Slack 메시지 전송
-			SlackMessageRequestDto requestDto = SlackMessageRequestDto.builder()
-				.receiverId(shippingData.getShippingManagerName())
-				.message(generatedMessage)
-				.channel("#shipping-message")
-				.build();
-
-			sendMessage(requestDto);
-
-			return MessageResponseDto.fromEntity(savedMessage);
-		} catch (Exception e) {
-			throw new MessageProcessingException("메시지 처리 중 오류가 발생했습니다.");
+		if (shippingData == null) {
+			throw new EntityNotFoundException("주문 ID에 해당하는 배송 정보를 찾을 수 없습니다: " + orderId);
 		}
+
+		// AiService를 통한 메시지 생성
+		String generatedMessage = aiService.generateShippingTimeMessage(shippingData);
+
+		// 메시지 저장
+		Message message = Message.builder()
+			.message(generatedMessage)
+			.recipientId(shippingData.getShippingManagerName())
+			.build();
+
+		Message savedMessage = messageRepository.save(message);
+
+		// Slack 메시지 전송
+		SlackMessageRequestDto requestDto = SlackMessageRequestDto.builder()
+			.receiverId(shippingData.getShippingManagerName())
+			.message(generatedMessage)
+			.channel("#message")
+			.build();
+
+		sendMessage(requestDto);
+
+		return ShippingClientDataResponseDto.fromEntity(savedMessage);
+	}
+
+	@Transactional
+	public void sendSoldOutNotification(SoldOutMessageRequest request) {
+		String formattedMessage = String.format(
+			"\n🔹 상품명: %s\n📅 재고 소진 일자: %s\n⚠ 알림: 해당 상품의 재고가 모두 소진되었습니다. 빠른 조치 바랍니다.",
+			request.getProductName(),
+			request.getSoldOutAt()
+		);
+
+		Message message = Message.builder()
+			.message(formattedMessage)
+			.recipientId(request.getVenderSlackId())
+			.build();
+
+		messageRepository.save(message);
+
+		SlackMessageRequestDto slackRequest = SlackMessageRequestDto.builder()
+			.receiverId(request.getVenderSlackId())
+			.message(formattedMessage)
+			.channel("#message")
+			.build();
+
+		sendMessage(slackRequest);
 	}
 }
