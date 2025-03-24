@@ -8,6 +8,6 @@ import com.devsquad10.company.application.dto.SoldOutMessageRequest;
 
 @FeignClient(name = "${feign.client.message.name}", url = "${feign.client.message.url}")
 public interface MessageClient {
-	@PostMapping("stock-depletion")
+	@PostMapping("/stock-depletion")
 	void sendSoldOutMessage(@RequestBody SoldOutMessageRequest request);
 }
