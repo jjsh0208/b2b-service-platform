@@ -53,63 +53,13 @@ public class HubRouteService {
 		@CacheEvict(value = "hubRouteSearchCache", allEntries = true)
 	})
 	public HubRouteCreateResponseDto createHubRoute(HubRouteCreateRequestDto request) {
-		Hub departureHub = hubRepository.findById(request.getDepartureHubId())
-			.orElseThrow(() -> new HubNotFoundException("출발 허브를 찾을 수 없습니다. ID: " + request.getDepartureHubId()));
+		HubRoute hubRoute = getOrCreateHubRoute(
+			request.getDepartureHubId(),
+			request.getDestinationHubId(),
+			request.getStrategyType()
+		);
 
-		Hub destinationHub = hubRepository.findById(request.getDestinationHubId())
-			.orElseThrow(() -> new HubNotFoundException("도착 허브를 찾을 수 없습니다. ID: " + request.getDestinationHubId()));
-
-		Optional<HubRoute> existingRoute = hubRouteRepository.findByDepartureHubAndDestinationHub(
-			departureHub, destinationHub);
-
-		if (existingRoute.isPresent()) {
-			return HubRouteCreateResponseDto.toResponseDto(existingRoute.get());
-		}
-
-		RouteCalculationResult calculationResult =
-			executeSelectedStrategy(departureHub, destinationHub, request.getStrategyType());
-
-		HubRoute newHubRoute = HubRoute.builder()
-			.departureHub(departureHub)
-			.destinationHub(destinationHub)
-			.distance(calculationResult.getDistance())
-			.duration(calculationResult.getDuration())
-			.build();
-
-		if (calculationResult.getWaypoint() != null) {
-			// 경유지 ID 가져오기
-			Set<UUID> waypointHubIds = new HashSet<>();
-
-			for (HubRouteWaypointDto dto : calculationResult.getWaypoint()) {
-				waypointHubIds.add(dto.getDepartureHubId());
-				waypointHubIds.add(dto.getDestinationHubId());
-			}
-
-			Map<UUID, Hub> waypointHubMap = new HashMap<>();
-
-			// 모든 경유 허브 조회
-			for (Hub hub : hubRepository.findAllById(waypointHubIds)) {
-				waypointHubMap.put(hub.getId(), hub);
-			}
-
-			List<HubRouteWaypoint> waypointEntities = calculationResult.getWaypoint().stream()
-				.map(dto -> HubRouteWaypoint.builder()
-					.hubRoute(newHubRoute)
-					.departureHub(waypointHubMap.get(dto.getDepartureHubId()))
-					.destinationHub(waypointHubMap.get(dto.getDestinationHubId()))
-					.sequence(dto.getSequence())
-					.distance(dto.getDistance())
-					.duration(dto.getDuration())
-					.build()
-				)
-				.toList();
-
-			newHubRoute.getWaypoints().addAll(waypointEntities);
-		}
-
-		HubRoute savedRoute = hubRouteRepository.save(newHubRoute);
-
-		return HubRouteCreateResponseDto.toResponseDto(savedRoute);
+		return HubRouteCreateResponseDto.toResponseDto(hubRoute);
 	}
 
 	@Transactional(readOnly = true)
@@ -179,26 +129,38 @@ public class HubRouteService {
 		};
 	}
 
-	// TODO: 중복 코드 리팩토링
 	@Caching(evict = {
 		@CacheEvict(value = "hubRouteSearchCache", allEntries = true)
 	})
 	public List<HubFeignClientGetRequest> getHubRouteInfo(UUID departureHubId, UUID destinationHubId) {
+		HubRoute hubRoute = getOrCreateHubRoute(
+			departureHubId,
+			destinationHubId,
+			HubRouteStrategyType.HUB_TO_HUB_RELAY
+		);
+
+		return HubFeignClientGetRequest.from(hubRoute);
+	}
+
+	private HubRoute getOrCreateHubRoute(UUID departureHubId, UUID destinationHubId, HubRouteStrategyType strategyType) {
 		Hub departureHub = hubRepository.findById(departureHubId)
-			.orElseThrow(() -> new HubNotFoundException("출발 허브를 찾을 수 없습니다: " + departureHubId));
+			.orElseThrow(() -> new HubNotFoundException("출발 허브를 찾을 수 없습니다. ID: " + departureHubId));
 
 		Hub destinationHub = hubRepository.findById(destinationHubId)
-			.orElseThrow(() -> new HubNotFoundException("도착 허브를 찾을 수 없습니다: " + destinationHubId));
+			.orElseThrow(() -> new HubNotFoundException("도착 허브를 찾을 수 없습니다. ID: " + destinationHubId));
 
 		Optional<HubRoute> existingRoute = hubRouteRepository.findByDepartureHubAndDestinationHub(
 			departureHub, destinationHub);
 
 		if (existingRoute.isPresent()) {
-			return HubFeignClientGetRequest.from(existingRoute.get());
+			return existingRoute.get();
 		}
 
-		RouteCalculationResult calculationResult = executeSelectedStrategy(departureHub, destinationHub,
-			HubRouteStrategyType.HUB_TO_HUB_RELAY);
+		return createNewHubRoute(departureHub, destinationHub, strategyType);
+	}
+
+	private HubRoute createNewHubRoute(Hub departureHub, Hub destinationHub, HubRouteStrategyType strategyType) {
+		RouteCalculationResult calculationResult = executeSelectedStrategy(departureHub, destinationHub, strategyType);
 
 		HubRoute newHubRoute = HubRoute.builder()
 			.departureHub(departureHub)
@@ -207,39 +169,42 @@ public class HubRouteService {
 			.duration(calculationResult.getDuration())
 			.build();
 
-		if (calculationResult.getWaypoint() != null) {
-			// 경유지 ID 가져오기
-			Set<UUID> waypointHubIds = new HashSet<>();
+		addWaypointsToHubRoute(newHubRoute, calculationResult);
 
-			for (HubRouteWaypointDto dto : calculationResult.getWaypoint()) {
-				waypointHubIds.add(dto.getDepartureHubId());
-				waypointHubIds.add(dto.getDestinationHubId());
-			}
+		return hubRouteRepository.save(newHubRoute);
+	}
 
-			Map<UUID, Hub> waypointHubMap = new HashMap<>();
-
-			// 모든 경유 허브 조회
-			for (Hub hub : hubRepository.findAllById(waypointHubIds)) {
-				waypointHubMap.put(hub.getId(), hub);
-			}
-
-			List<HubRouteWaypoint> waypointEntities = calculationResult.getWaypoint().stream()
-				.map(dto -> HubRouteWaypoint.builder()
-					.hubRoute(newHubRoute)
-					.departureHub(waypointHubMap.get(dto.getDepartureHubId()))
-					.destinationHub(waypointHubMap.get(dto.getDestinationHubId()))
-					.sequence(dto.getSequence())
-					.distance(dto.getDistance())
-					.duration(dto.getDuration())
-					.build()
-				)
-				.toList();
-
-			newHubRoute.getWaypoints().addAll(waypointEntities);
+	private void addWaypointsToHubRoute(HubRoute hubRoute, RouteCalculationResult calculationResult) {
+		if (calculationResult.getWaypoint() == null || calculationResult.getWaypoint().isEmpty()) {
+			return;
 		}
 
-		HubRoute savedRoute = hubRouteRepository.save(newHubRoute);
+		// 경유지 ID 가져오기
+		Set<UUID> waypointHubIds = new HashSet<>();
+		for (HubRouteWaypointDto dto : calculationResult.getWaypoint()) {
+			waypointHubIds.add(dto.getDepartureHubId());
+			waypointHubIds.add(dto.getDestinationHubId());
+		}
 
-		return HubFeignClientGetRequest.from(savedRoute);
+		Map<UUID, Hub> waypointHubMap = new HashMap<>();
+
+		// 모든 경유 허브 조회
+		for (Hub hub : hubRepository.findAllById(waypointHubIds)) {
+			waypointHubMap.put(hub.getId(), hub);
+		}
+
+		List<HubRouteWaypoint> waypointEntities = calculationResult.getWaypoint().stream()
+			.map(dto -> HubRouteWaypoint.builder()
+				.hubRoute(hubRoute)
+				.departureHub(waypointHubMap.get(dto.getDepartureHubId()))
+				.destinationHub(waypointHubMap.get(dto.getDestinationHubId()))
+				.sequence(dto.getSequence())
+				.distance(dto.getDistance())
+				.duration(dto.getDuration())
+				.build()
+			)
+			.toList();
+
+		hubRoute.getWaypoints().addAll(waypointEntities);
 	}
 }
