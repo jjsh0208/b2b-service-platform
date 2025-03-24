@@ -33,6 +33,7 @@ import com.devsquad10.shipping.domain.repository.ShippingHistoryRepository;
 import com.devsquad10.shipping.domain.repository.ShippingRepository;
 import com.devsquad10.shipping.infrastructure.client.HubClient;
 import com.devsquad10.shipping.infrastructure.client.HubRouteClient;
+import com.devsquad10.shipping.infrastructure.client.MessageClient;
 import com.devsquad10.shipping.infrastructure.client.OrderClient;
 import com.devsquad10.shipping.infrastructure.client.UserClient;
 import com.devsquad10.shipping.infrastructure.client.dto.HubFeignClientGetRequest;
@@ -57,6 +58,7 @@ public class ShippingService {
 	private final HubRouteClient hubRouteClient;
 	private final UserClient userClient;
 	private final OrderClient orderClient;
+	private final MessageClient messageClient;
 
 	// TODO: 권한 확인 - MASTER, 담당 HUB, DVL_AGENT
 	//TODO: GPS + Geolocation 적용하여 배송 위치 추적에 따른 배송 경로기록 상태 이벤트 처리
@@ -88,11 +90,11 @@ public class ShippingService {
 		Shipping shipping = shippingRepository.findByIdWithPessimisticLock(id)
 			.orElseThrow(() -> new ShippingNotFoundException("ID " + id + "에 해당하는 배송 데이터를 찾을 수 없습니다."));
 
-		// 배정 횟수 컬럼 추가하여 배정 시 횟수 업데이트 구현 -> 최소 배정 건수인 배송담당자 선택
 		// 배송담당자 ID가 이미 배정된 경우 처리
 		if (shipping.getCompanyShippingManagerId() != null) {
 			throw new ShippingAgentAlreadyAllocatedException("업체 배송담당자가 이미 배정되어 담당자배정 불가합니다.");
 		}
+		// 배정 횟수 컬럼 추가하여 배정 시 횟수 업데이트 구현 -> 최소 배정 건수인 배송담당자 선택
 		MinimumCountAllocationResult allocationResult = shippingAgentAllocation.allocateCompanyAgent(
 			shipping.getDestinationHubId(),
 			shipping.getStatus()
@@ -101,11 +103,19 @@ public class ShippingService {
 			throw new ShippingAgentNotAllocatedException("배송 담당자 배정이 불가능합니다.");
 		}
 
+		// TODO: 테스트 후, 삭제(함께 슬랙 메시지 발송)
+		sendSlackNotification(shipping.getOrderId());
+
 		shipping.preUpdate();
 		return shippingRepository.save(shipping.toBuilder()
 			.companyShippingManagerId(allocationResult.getShippingManagerId())
 			.build()).toResponseDto();
 	}
+
+	private void sendSlackNotification(UUID orderId) {
+		messageClient.generateAndSendShippingTimeMessage(orderId);
+	}
+
 
 	// TODO: 권한 확인 - ALL + 담당 HUB, DVL_AGENT
 	@Transactional(readOnly = true)

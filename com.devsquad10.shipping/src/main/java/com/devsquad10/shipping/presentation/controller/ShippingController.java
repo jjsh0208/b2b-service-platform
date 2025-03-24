@@ -42,10 +42,9 @@ public class ShippingController {
 				HttpStatus.OK.value(),
 				shippingService.statusUpdateShipping(id, shippingUpdateReqDto))
 			);
-
 	}
 
-	// 상태(HUB_ARV) 변경 시, 업체배송담당자 할당 - ID update
+	// 허브 도착 상태(HUB_ARV) 이벤트 시, 업체배송담당자 할당 - ID update
 	@PatchMapping("/allocation/{id}")
 	public ResponseEntity<ShippingResponse<?>> allocationShipping(@PathVariable(name = "id") UUID id) {
 		return ResponseEntity.status(HttpStatus.OK)
