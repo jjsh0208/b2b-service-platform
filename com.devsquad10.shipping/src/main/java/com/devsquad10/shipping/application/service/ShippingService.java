@@ -39,7 +39,7 @@ import com.devsquad10.shipping.infrastructure.client.UserClient;
 import com.devsquad10.shipping.infrastructure.client.dto.HubFeignClientGetRequest;
 import com.devsquad10.shipping.infrastructure.client.dto.OrderFeignClientDto;
 import com.devsquad10.shipping.infrastructure.client.dto.ShippingClientData;
-import com.devsquad10.shipping.infrastructure.client.dto.UserInfoFeignClientRequest;
+import com.devsquad10.shipping.infrastructure.client.dto.UserInfoFeignClientResponse;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -223,7 +223,7 @@ public class ShippingService {
 		OrderFeignClientDto getOrder = orderClient.getOrderProductDetails(orderId);
 
 		// 배송담당자 id로 "이름, 슬랙ID" 정보 조회하는 User feign client 요청
-		UserInfoFeignClientRequest shippingManagerInfo = userClient.getUserInfoRequest(shipping.getCompanyShippingManagerId()).toRequest();
+		UserInfoFeignClientResponse shippingManagerInfo = userClient.getUserInfoRequest(shipping.getCompanyShippingManagerId());
 
 		return ShippingClientData.builder()
 			.orderId(shipping.getOrderId())

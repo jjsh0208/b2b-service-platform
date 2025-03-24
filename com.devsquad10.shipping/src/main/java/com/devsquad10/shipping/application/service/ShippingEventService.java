@@ -30,7 +30,7 @@ import com.devsquad10.shipping.infrastructure.client.HubRouteClient;
 import com.devsquad10.shipping.infrastructure.client.dto.HubFeignClientGetRequest;
 import com.devsquad10.shipping.infrastructure.client.dto.ShippingCompanyInfoDto;
 import com.devsquad10.shipping.infrastructure.client.UserClient;
-import com.devsquad10.shipping.infrastructure.client.dto.UserInfoFeignClientRequest;
+import com.devsquad10.shipping.infrastructure.client.dto.UserInfoFeignClientResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import feign.FeignException;
@@ -68,7 +68,7 @@ public class ShippingEventService {
 			shippingCreateMessage);
 
 		// 도착허브Id에서 수령업체의 담당자ID로 User feign client 이름 조회하여 수령인 이름 및 슬랙Id 추출
-		UserInfoFeignClientRequest userInfo = userClient.getUserInfoRequest(recipientsInfo.getVenderId());
+		UserInfoFeignClientResponse userInfo = userClient.getUserInfoRequest(recipientsInfo.getVenderId());
 
 		Shipping shipping = Shipping.builder()
 			.status(ShippingStatus.HUB_WAIT)
@@ -233,7 +233,7 @@ public class ShippingEventService {
 		ShippingCompanyInfoDto recipientsInfo = getRecipientsInfo(recipientsId, shippingUpdateMessage);
 
 		// 도착허브Id에서 수령업체의 담당자ID로 User feign client 이름 조회하여 수령인 이름 및 슬랙Id 추출
-		UserInfoFeignClientRequest userInfo = getUserInfo(recipientsInfo, shippingUpdateMessage);
+		UserInfoFeignClientResponse userInfo = getUserInfo(recipientsInfo, shippingUpdateMessage);
 
 		// 기존 배송 경로 기록 삭제 및 허브배송담당자 배송진행 여부(false) 변경 & 배정 횟수(assignmentCount--) 롤백
 		List<ShippingHistory> shippingHistories = shippingHistoryRepository.findByShippingIdAndDeletedAtIsNull(shipping.getId());
@@ -312,7 +312,7 @@ public class ShippingEventService {
 	}
 
 	// 도착허브Id에서 수령업체의 담당자ID로 User feign client 이름 조회하여 수령인 이름 및 슬랙Id 추출
-	private UserInfoFeignClientRequest getUserInfo(ShippingCompanyInfoDto recipientsInfo, ShippingUpdateMessage shippingUpdateMessage) {
+	private UserInfoFeignClientResponse getUserInfo(ShippingCompanyInfoDto recipientsInfo, ShippingUpdateMessage shippingUpdateMessage) {
 		try {
 			return userClient.getUserInfoRequest(recipientsInfo.getVenderId());
 		} catch (FeignException.FeignClientException e) {

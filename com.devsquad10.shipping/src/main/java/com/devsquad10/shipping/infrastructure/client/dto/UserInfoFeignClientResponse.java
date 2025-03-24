@@ -1,22 +1,19 @@
 package com.devsquad10.shipping.infrastructure.client.dto;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
 @Builder
-@AllArgsConstructor
-public class UserInfoFeignClientRequest {
+@Data
+@AllArgsConstructor(onConstructor_ = @JsonCreator)
+public class UserInfoFeignClientResponse {
 	private String username;
 	private String slackId;
-
-	public UserInfoFeignClientRequest toRequest() {
-		return UserInfoFeignClientRequest.builder()
-			.username(this.username)
-			.slackId(this.slackId)
-			.build();
-	}
 }
