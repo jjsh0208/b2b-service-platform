@@ -1,25 +1,10 @@
 services:
-  postgres:
-    image: postgres:16
-    container_name: postgres
-    restart: always
-    environment:
-      POSTGRES_DB: b2b
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    ports:
-      - "${DB_PORT}:5432"
-    networks:
-      - b2b-network
-
   backend:
     build:
       context: .
       dockerfile: Dockerfile
-    image: company
-    container_name: company
-    depends_on:
-      - postgres
+    image: product
+    container_name: product
     env_file:
       - .env
     environment:
@@ -29,10 +14,11 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
     ports:
-      - "${SERVER_PORT}:8080"
+      - "${ENV_SERVER_PORT}:8080"
     networks:
       - b2b-network
 
 networks:
   b2b-network:
     external: true
+
