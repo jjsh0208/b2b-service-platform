@@ -181,4 +181,12 @@ public class UserService {
 		UserInfoFeignClientResponse userInfo = new UserInfoFeignClientResponse(user.getUsername(), user.getSlackId());
 		return userInfo;
 	}
+
+	public String getUserSlackId(UUID userId) {
+		log.info("유저 슬랙 ID 조회");
+		User user = (User)userRepository.findByIdAndDeletedAtIsNull(userId)
+			.orElseThrow(() -> new IllegalArgumentException("가입되지 않은 사용자입니다."));
+		log.info("유저 슬랙 ID 조회 완료");
+		return user.getSlackId();
+	}
 }
