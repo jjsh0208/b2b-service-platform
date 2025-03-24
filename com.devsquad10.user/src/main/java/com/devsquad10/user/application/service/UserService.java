@@ -68,10 +68,10 @@ public class UserService {
 
 		if (user.getRole() == UserRoleEnum.DVL_OFFICER) {
 			ShippingAgentFeignClientPostRequest shippingRequest = new ShippingAgentFeignClientPostRequest();
-			shippingRequest.setId(user.getId());
+			shippingRequest.setShippingManagerId(user.getId());
 			shippingRequest.setSlackId(user.getSlackId());
-			shippingRequest.setType(null);
-			shippingRequest.setHubId(null);
+			shippingRequest.setType(requestDto.getType());
+			shippingRequest.setHubId(requestDto.getHubId());
 
 			shippingClient.createShippingAgent(shippingRequest);
 		}
