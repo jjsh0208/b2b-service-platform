@@ -208,7 +208,7 @@ public class ShippingService {
 		}
 
 		// 주문Id로 "상품명, 수량" 조회하는 Order feign client 요청
-		OrderFeignClientDto getOrder = orderClient.getOrder(orderId);
+		OrderFeignClientDto getOrder = orderClient.getOrderProductDetails(orderId);
 
 		// 배송담당자 id로 "이름, 슬랙ID" 정보 조회하는 User feign client 요청
 		UserInfoFeignClientRequest shippingManagerInfo = userClient.getUserInfoRequest(shipping.getCompanyShippingManagerId()).toRequest();
