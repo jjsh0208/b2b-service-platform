@@ -118,4 +118,9 @@ public class HubController {
 		return hubRouteService.getHubRouteInfo(
 			departureHubId, destinationHubId);
 	}
+
+	@GetMapping("/shipping/{id}")
+	public String getHubName(@PathVariable(name = "id") UUID id) {
+		return hubService.getOneHub(id).getName();
+	}
 }
