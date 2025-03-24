@@ -52,6 +52,7 @@ public class CompanyService {
 			.hubId(hubId)
 			.address(companyReqDto.getAddress())
 			.type(companyReqDto.getType())
+			.createdBy(userId)
 			.build()).toResponseDto();
 	}
 
@@ -80,7 +81,7 @@ public class CompanyService {
 	@Caching(evict = {
 		@CacheEvict(cacheNames = "companySearchCache", allEntries = true)
 	})
-	public CompanyResDto updateCompany(UUID id, CompanyReqDto companyReqDto) {
+	public CompanyResDto updateCompany(UUID id, CompanyReqDto companyReqDto, String userId) {
 		Company targetCompany = companyRepository.findByIdAndDeletedAtIsNull(id)
 			.orElseThrow(() -> new CompanyNotFoundException("Company Not Found By  Id : " + id));
 
@@ -97,7 +98,7 @@ public class CompanyService {
 			.address(companyReqDto.getAddress())
 			.type(companyReqDto.getType())
 			.updatedAt(LocalDateTime.now())
-			.updatedBy("사용자")
+			.updatedBy(userId)
 			.build()).toResponseDto();
 	}
 
@@ -105,13 +106,13 @@ public class CompanyService {
 		@CacheEvict(cacheNames = "companyCache", key = "#id"),
 		@CacheEvict(cacheNames = "companySearchCache", key = "#id")
 	})
-	public void deleteCompany(UUID id) {
+	public void deleteCompany(UUID id, String userId) {
 		Company targetCompany = companyRepository.findByIdAndDeletedAtIsNull(id)
 			.orElseThrow(() -> new CompanyNotFoundException("Company Not Found By  Id : " + id));
 
 		companyRepository.save(targetCompany.toBuilder()
 			.deletedAt(LocalDateTime.now())
-			.deletedBy("사용자")
+			.deletedBy(userId)
 			.build());
 	}
 

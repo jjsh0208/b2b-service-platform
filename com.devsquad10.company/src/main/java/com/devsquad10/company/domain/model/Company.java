@@ -86,7 +86,6 @@ public class Company {
 		LocalDateTime time = LocalDateTime.now();
 		this.createdAt = time;
 		this.updatedAt = time;
-		this.createdBy = "사용자";
 	}
 
 	public CompanyResDto toResponseDto() {
