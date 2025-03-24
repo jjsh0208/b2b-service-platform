@@ -33,7 +33,6 @@ public class HubSearchRequestDto {
 	@Builder.Default
 	private Integer page = 0;
 
-	// TODO: Sort Option 관련 예외 처리
 	@Builder.Default
 	private HubSortOption sortOption = HubSortOption.CREATED_AT;
 

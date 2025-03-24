@@ -11,7 +11,6 @@ import com.devsquad10.hub.application.exception.HubRouteNotFoundException;
 
 @RestControllerAdvice
 public class HubRouteExceptionHandler {
-	// TODO: custom error code로 설정
 	@ExceptionHandler(HubRouteNotFoundException.class)
 	@ResponseStatus(HttpStatus.NOT_FOUND)
 	public ResponseEntity<ApiResponse<String>> handleHubRouteNotFoundException(HubRouteNotFoundException e) {

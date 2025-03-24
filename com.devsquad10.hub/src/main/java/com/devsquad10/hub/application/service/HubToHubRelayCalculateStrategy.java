@@ -35,7 +35,6 @@ public class HubToHubRelayCalculateStrategy implements HubRouteCalculateStrategy
 		return null;
 	}
 
-	// TODO: 알고리즘 효율 확인 필요
 	@Override
 	public RouteCalculationResult calculateRoute(Hub departureHub, Hub destinationHub) {
 
