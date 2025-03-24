@@ -21,6 +21,15 @@ services:
       RABBITMQ_DEFAULT_PASS: guest
     restart: unless-stopped
 
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: zipkin
+    ports:
+      - "9411:9411" # Zipkin UI 포트
+    environment:
+      - ZIPKIN_HTTP_PORT=9411
+    restart: always
+
 volumes:
-  kafka_data:
+  service_data:
     driver: local

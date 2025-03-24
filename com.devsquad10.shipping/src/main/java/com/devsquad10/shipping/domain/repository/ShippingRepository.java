@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.devsquad10.shipping.application.dto.request.ShippingSearchReqDto;
 import com.devsquad10.shipping.domain.model.Shipping;
 
 import jakarta.persistence.LockModeType;
@@ -23,5 +24,8 @@ public interface ShippingRepository {
 	@Query("select s from Shipping s where s.id = :id and s.deletedAt is null")
 	Optional<Shipping> findByIdWithPessimisticLock(@Param("id") UUID id);
 
-	Page<Shipping> findAll(String q, String category, int page, int size, String sort, String order);
+	Page<Shipping> findAll(@Param("request") ShippingSearchReqDto request);
+
+	// 주문Id로 배송 조회
+	Optional<Shipping> findByOrderIdAndDeletedAtIsNull(UUID orderId);
 }
