@@ -142,7 +142,8 @@ public class HubRouteService {
 		return HubFeignClientGetRequest.from(hubRoute);
 	}
 
-	private HubRoute getOrCreateHubRoute(UUID departureHubId, UUID destinationHubId, HubRouteStrategyType strategyType) {
+	private HubRoute getOrCreateHubRoute(UUID departureHubId, UUID destinationHubId,
+		HubRouteStrategyType strategyType) {
 		Hub departureHub = hubRepository.findById(departureHubId)
 			.orElseThrow(() -> new HubNotFoundException("출발 허브를 찾을 수 없습니다. ID: " + departureHubId));
 
