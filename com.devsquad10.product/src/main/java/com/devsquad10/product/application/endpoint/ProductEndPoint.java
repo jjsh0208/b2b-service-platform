@@ -17,12 +17,12 @@ public class ProductEndPoint {
 
 	private final ProductEventService productEventService;
 
-	@RabbitListener(queues = "${stockMessage.queue.stock.request}")
+	@RabbitListener(queues = "${stockMessage.queue.stock.request}", concurrency = "1")
 	public void handleStockDecrementRequest(StockDecrementMessage stockDecrementMessage) {
 		productEventService.decreaseStock(stockDecrementMessage);
 	}
 
-	@RabbitListener(queues = "${stockMessage.queue.stockRecovery.request}")
+	@RabbitListener(queues = "${stockMessage.queue.stockRecovery.request}", concurrency = "1")
 	public void handlerStockRecoveryRequest(StockReversalMessage stockReversalMessage) {
 		productEventService.recoveryStock(stockReversalMessage);
 	}
