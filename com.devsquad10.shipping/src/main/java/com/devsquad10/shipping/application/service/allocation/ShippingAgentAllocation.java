@@ -31,10 +31,6 @@ public class ShippingAgentAllocation implements ShippingAgentAllocationMethod {
 	@Override
 	@Transactional
 	public MinimumCountAllocationResult allocateCompanyAgent(UUID destinationHubId, ShippingStatus shippingStatus) {
-		// 목적지 허브 도착전까지 담당자 할당 불가
-		if (shippingStatus != ShippingStatus.HUB_ARV) {
-			throw new ShippingStatusIsNotAllocatedException(shippingStatus + " 상태로 배송담당자 배정 불가합니다.");
-		}
 		return allocateAgent(destinationHubId, ShippingAgentType.COM_DVL);
 	}
 
