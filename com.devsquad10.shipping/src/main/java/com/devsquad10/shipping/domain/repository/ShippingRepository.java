@@ -32,6 +32,6 @@ public interface ShippingRepository {
 	Optional<Shipping> findByOrderIdAndDeletedAtIsNull(UUID orderId);
 
 	// 납품기한이 오늘 날짜인 배송 전체 조회
-	@Query("SELECT s FROM Shipping s WHERE s.deadLine = CURRENT_DATE")
-	List<Shipping> findShippingWithDeadlineToday(Date deadLine);
+	@Query("SELECT s FROM Shipping s WHERE s.deletedAt is NULL AND FUNCTION('DATE', s.deadLine) = CURRENT_DATE")
+	List<Shipping> findShippingWithDeadlineToday();
 }

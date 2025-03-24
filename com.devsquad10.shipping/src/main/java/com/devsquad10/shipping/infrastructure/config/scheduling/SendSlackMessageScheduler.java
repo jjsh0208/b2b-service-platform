@@ -22,7 +22,7 @@ public class SendSlackMessageScheduler {
 	private final MessageClient messageClient;
 
 	// @Scheduled(cron = "0 0 6 * * *") // 매일 오전 6시
-	// @Scheduled(cron = "* */1 * * * *") // 테스트용 1분 마다
+	// @Scheduled(cron = "* */2 * * * *") // 테스트용 2분 마다
 	public void sendDailySlackNotification() {
 		List<Shipping> dailyDeadLines = shippingRepository.findShippingWithDeadlineToday();
 		log.info("dailyDeadLines.size(): {}", dailyDeadLines.size());

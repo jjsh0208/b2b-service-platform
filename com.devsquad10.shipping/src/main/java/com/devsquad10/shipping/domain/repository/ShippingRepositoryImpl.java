@@ -53,8 +53,8 @@ public class ShippingRepositoryImpl implements ShippingRepository{
 	}
 
 	@Override
-	@Query("SELECT s FROM Shipping s WHERE s.deadLine = CURRENT_DATE")
-	public List<Shipping> findShippingWithDeadlineToday(Date deadLine) {
-		return jpaShippingRepository.findShippingWithDeadlineToday(deadLine);
+	// @Query("SELECT s FROM Shipping s WHERE DATE(s.deadLine) = CURRENT_DATE")
+	public List<Shipping> findShippingWithDeadlineToday() {
+		return jpaShippingRepository.findShippingWithDeadlineToday();
 	}
 }

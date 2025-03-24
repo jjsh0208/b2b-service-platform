@@ -26,6 +26,7 @@ public interface JpaShippingRepository extends JpaRepository<Shipping, UUID>, Sh
 
 	Optional<Shipping> findByOrderIdAndDeletedAtIsNull(UUID id);
 
-	@Query("SELECT s FROM Shipping s WHERE s.deadLine = CURRENT_DATE")
-	List<Shipping> findShippingWithDeadlineToday(Date deadLine);
+	// @Query("SELECT s FROM Shipping s WHERE DATE(s.deadLine) = CURRENT_DATE")
+	@Query("SELECT s FROM Shipping s WHERE s.deletedAt is NULL AND FUNCTION('DATE', s.deadLine) = CURRENT_DATE")
+	List<Shipping> findShippingWithDeadlineToday();
 }
