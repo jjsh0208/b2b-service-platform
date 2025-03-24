@@ -28,20 +28,20 @@ ext {
 }
 
 dependencies {
+	// 분산 추적
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'io.micrometer:micrometer-tracing-bridge-brave'
+	implementation 'io.github.openfeign:feign-micrometer'
+	implementation 'io.zipkin.reporter2:zipkin-reporter-brave'
+
 	// feign client
 	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
 
 	// validation 설정
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 
-//	// Jackson2JsonRedisSerializer 의존성
-//	implementation 'com.fasterxml.jackson.core:jackson-databind'
-//	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
-
 	//queryDSL 의존성
 	implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
-	implementation "com.querydsl:querydsl-core"
-	implementation "com.querydsl:querydsl-collections"
 	annotationProcessor "com.querydsl:querydsl-apt:5.0.0:jakarta"
 	annotationProcessor "jakarta.annotation:jakarta.annotation-api"
 	annotationProcessor "jakarta.persistence:jakarta.persistence-api"
