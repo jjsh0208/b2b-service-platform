@@ -13,13 +13,11 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ShippingClientData {
+public class ShippingClientDataRequestDto {
 	// 주문 ID
 	private String orderId;
 	// 주문자 이름
 	private String customerName;
-	// 주문자 이메일
-	private String customerEmail;
 	// 상품 이름
 	private String productInfo;
 	// 상품 개수
@@ -32,10 +30,8 @@ public class ShippingClientData {
 	private List<String> waypointHubNames;
 	// 허브 도착지
 	private String destinationHubName;
+	// 배송지 주소
+	private String address;
 	// 배송 담당자
 	private String shippingManagerName;
-	// 배송 담당자 이메일
-	private String shippingManagerEmail;
-	// 배송 담당자 Slack Id
-	private String shippingManagerSlackId;
 }
