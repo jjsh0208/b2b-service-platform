@@ -97,4 +97,14 @@ public class UserController {
 		}
 		return userInfo;
 	}
+
+	@GetMapping("/slackId/{userId}")
+	String getUserSlackId(@PathVariable("userId") UUID userId) {
+		log.info("유저 슬랙 ID 조회");
+		String slackId = userService.getUserSlackId(userId);
+		if (slackId == null) {
+			return null;
+		}
+		return slackId;
+	}
 }

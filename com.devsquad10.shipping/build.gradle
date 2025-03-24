@@ -28,14 +28,14 @@ ext {
 }
 
 dependencies {
-	// 분산 추적
-	implementation 'org.springframework.boot:spring-boot-starter-actuator'
-	implementation 'io.micrometer:micrometer-tracing-bridge-brave'
-	implementation 'io.github.openfeign:feign-micrometer'
-	implementation 'io.zipkin.reporter2:zipkin-reporter-brave'
+    // 분산 추적
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'io.micrometer:micrometer-tracing-bridge-brave'
+    implementation 'io.github.openfeign:feign-micrometer'
+    implementation 'io.zipkin.reporter2:zipkin-reporter-brave'
 
-	// feign client
-	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+    // feign client
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
 
 	// validation 설정
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
@@ -77,7 +77,7 @@ tasks.withType(JavaCompile) {
 
 // java source set 에 querydsl QClass 위치 추가
 sourceSets {
-	main.java.srcDirs += [ generated ]
+    main.java.srcDirs += [generated]
 }
 
 // gradle clean 시에 QClass 디렉토리 삭제
@@ -87,9 +87,9 @@ clean {
 
 // 컴파일 플래그 설정
 tasks.withType(JavaCompile) {
-	options.compilerArgs << '-parameters'
+    options.compilerArgs << '-parameters'
 }
 
 tasks.named('test') {
-	useJUnitPlatform()
+    useJUnitPlatform()
 }

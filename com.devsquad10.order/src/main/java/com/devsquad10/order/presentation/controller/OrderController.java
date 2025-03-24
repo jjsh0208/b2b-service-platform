@@ -10,10 +10,12 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.devsquad10.order.application.dto.OrderFeignClientDto;
 import com.devsquad10.order.application.dto.OrderReqDto;
 import com.devsquad10.order.application.dto.OrderResDto;
 import com.devsquad10.order.application.dto.OrderUpdateReqDto;
@@ -31,10 +33,11 @@ public class OrderController {
 	private final OrderService orderService;
 
 	@PostMapping
-	public ResponseEntity<OrderResponse<OrderResDto>> createOrder(@RequestBody OrderReqDto orderReqDto) {
+	public ResponseEntity<OrderResponse<OrderResDto>> createOrder(@RequestBody OrderReqDto orderReqDto,
+		@RequestHeader("X-User-Id") String userId) {
 
 		return ResponseEntity.status(HttpStatus.OK)
-			.body(OrderResponse.success(HttpStatus.OK.value(), orderService.createOrder(orderReqDto)));
+			.body(OrderResponse.success(HttpStatus.OK.value(), orderService.createOrder(orderReqDto, userId)));
 	}
 
 	@GetMapping("/{id}")
@@ -60,16 +63,28 @@ public class OrderController {
 
 	@PatchMapping("/{id}")
 	public ResponseEntity<OrderResponse<OrderResDto>> updateOrder(@PathVariable("id") UUID id,
-		@RequestBody OrderUpdateReqDto orderUpdateReqDto) {
+		@RequestBody OrderUpdateReqDto orderUpdateReqDto, @RequestHeader("X-User-Id") String userId) {
 		return ResponseEntity.status(HttpStatus.OK)
-			.body(OrderResponse.success(HttpStatus.OK.value(), orderService.updateOrder(id, orderUpdateReqDto)));
+			.body(
+				OrderResponse.success(HttpStatus.OK.value(), orderService.updateOrder(id, orderUpdateReqDto, userId)));
 	}
 
 	@DeleteMapping("/{id}")
-	public ResponseEntity<OrderResponse<String>> deleteOrder(@PathVariable("id") UUID id) {
-		orderService.deleteOrder(id);
+	public ResponseEntity<OrderResponse<String>> deleteOrder(@PathVariable("id") UUID id,
+		@RequestHeader("X-User-Id") String userId) {
+		orderService.deleteOrder(id, userId);
 		return ResponseEntity.status(HttpStatus.OK)
 			.body(OrderResponse.success(HttpStatus.OK.value(), "Order Deleted successfully"));
+	}
+
+	@PatchMapping("/shipping/{shippingId}")
+	public void updateOrderStatusToShipped(@PathVariable("shippingId") UUID shippingId) {
+		orderService.updateOrderStatusToShipped(shippingId);
+	}
+
+	@GetMapping("/products/{id}")
+	public OrderFeignClientDto getOrderProductDetails(@PathVariable(name = "id") UUID id) {
+		return orderService.getOrderProductDetails(id);
 	}
 
 }
