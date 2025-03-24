@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.devsquad10.order.application.dto.OrderFeignClientDto;
 import com.devsquad10.order.application.dto.OrderReqDto;
 import com.devsquad10.order.application.dto.OrderResDto;
 import com.devsquad10.order.application.dto.OrderUpdateReqDto;
@@ -186,5 +187,15 @@ public class OrderService {
 		orderRepository.save(order.toBuilder()
 			.status(OrderStatus.SHIPPED)
 			.build());
+	}
+
+	public OrderFeignClientDto getOrderProductDetails(UUID id) {
+		Order order = orderRepository.findByIdAndDeletedAtIsNull(id)
+			.orElseThrow(() -> new OrderNotFoundException("Order Not Found By Id : " + id));
+
+		return OrderFeignClientDto.builder()
+			.productName(order.getProductName() != null ? order.getProductName() : null)
+			.quantity(order.getQuantity() != null ? order.getQuantity() : null)
+			.build();
 	}
 }

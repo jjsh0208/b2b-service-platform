@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.devsquad10.order.application.dto.OrderFeignClientDto;
 import com.devsquad10.order.application.dto.OrderReqDto;
 import com.devsquad10.order.application.dto.OrderResDto;
 import com.devsquad10.order.application.dto.OrderUpdateReqDto;
@@ -79,6 +80,11 @@ public class OrderController {
 	@PatchMapping("/shipping/{shippingId}")
 	public void updateOrderStatusToShipped(@PathVariable("shippingId") UUID shippingId) {
 		orderService.updateOrderStatusToShipped(shippingId);
+	}
+
+	@GetMapping("/products/{id}")
+	public OrderFeignClientDto getOrderProductDetails(@PathVariable(name = "id") UUID id) {
+		return orderService.getOrderProductDetails(id);
 	}
 
 }
