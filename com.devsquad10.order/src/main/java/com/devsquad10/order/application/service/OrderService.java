@@ -11,10 +11,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.devsquad10.order.application.client.CompanyClient;
 import com.devsquad10.order.application.dto.OrderReqDto;
 import com.devsquad10.order.application.dto.OrderResDto;
 import com.devsquad10.order.application.dto.OrderUpdateReqDto;
+import com.devsquad10.order.application.dto.PageOrderResponseDto;
+import com.devsquad10.order.application.dto.message.ShippingUpdateRequest;
 import com.devsquad10.order.application.dto.message.StockDecrementMessage;
 import com.devsquad10.order.application.dto.message.StockReversalMessage;
 import com.devsquad10.order.application.exception.OrderNotFoundException;
@@ -23,6 +24,8 @@ import com.devsquad10.order.domain.enums.OrderStatus;
 import com.devsquad10.order.domain.model.Order;
 import com.devsquad10.order.domain.repository.OrderQuerydslRepository;
 import com.devsquad10.order.domain.repository.OrderRepository;
+import com.devsquad10.order.infrastructure.client.CompanyClient;
+import com.devsquad10.order.infrastructure.client.ShippingClient;
 
 import lombok.RequiredArgsConstructor;
 
@@ -35,6 +38,7 @@ public class OrderService {
 	private final OrderQuerydslRepository orderQuerydslRepository;
 	private final OrderMessageService orderMessageService;
 	private final CompanyClient companyClient;
+	private final ShippingClient shippingClient;
 
 	@CachePut(cacheNames = "orderCache", key = "#result.id")
 	public OrderResDto createOrder(OrderReqDto orderReqDto) {
@@ -65,11 +69,13 @@ public class OrderService {
 
 	@Cacheable(cacheNames = "orderSearchCache", key = "#q + '-' + #category + '-' + #page + '-' + #size")
 	@Transactional(readOnly = true)
-	public Page<OrderResDto> searchOrders(String q, String category, int page, int size, String sort, String order) {
+	public PageOrderResponseDto searchOrders(String q, String category, int page, int size, String sort, String order) {
 
 		Page<Order> orderPages = orderQuerydslRepository.findAll(q, category, page, size, sort, order);
 
-		return orderPages.map(Order::toResponseDto);
+		Page<OrderResDto> orderResDtoPages = orderPages.map(Order::toResponseDto);
+
+		return PageOrderResponseDto.toResponse(orderResDtoPages);
 
 	}
 
@@ -81,9 +87,12 @@ public class OrderService {
 
 		Order order = orderRepository.findByIdAndDeletedAtIsNull(id)
 			.orElseThrow(() -> new OrderNotFoundException("Order Not Found By Id : " + id));
+
+		String newRecipientsAddress = companyClient.findRecipientAddressByCompanyId(order.getRecipientsId());
+
 		//1. 배송지 변경 여부 확인
 		if (!order.getRecipientsId().equals(orderUpdateReqDto.getRecipientsId())) {
-			String newRecipientsAddress =
+			newRecipientsAddress =
 				companyClient.findRecipientAddressByCompanyId(orderUpdateReqDto.getRecipientsId());
 			if (newRecipientsAddress == null) {
 				throw new IllegalArgumentException(
@@ -93,8 +102,6 @@ public class OrderService {
 			order = order.toBuilder()
 				.recipientsId(orderUpdateReqDto.getRecipientsId())
 				.build();
-
-			// 배송지에도 업데이트 된 주소 전달 newRecipientsAddress;
 		}
 
 		//2. 수량도 변경되면 원래 재고 와 비교하여 감소되면 감소 줄어들면 재고 회복 메시지 전달
@@ -132,6 +139,16 @@ public class OrderService {
 			.deadLine(orderUpdateReqDto.getDeadLine())              // 납품 기한일자 업데이트
 			.build();
 
+		ShippingUpdateRequest shippingUpdateRequest = ShippingUpdateRequest.builder()
+			.orderId(order.getId())
+			.recipientsId(order.getRecipientsId())
+			.address(newRecipientsAddress)
+			.requestDetails(orderUpdateReqDto.getRequestDetails())
+			.deadLine(orderUpdateReqDto.getDeadLine())
+			.build();
+
+		orderMessageService.sendShippingUpdateMessage(shippingUpdateRequest);
+
 		// 5. 업데이트된 주문 정보 저장
 		orderRepository.save(order);
 
@@ -151,6 +168,7 @@ public class OrderService {
 			order.getQuantity());
 
 		orderMessageService.sendStockReversalMessage(stockReversalMessage);
+		shippingClient.deleteShippingForOrder(id);
 
 		orderRepository.save(order.toBuilder()
 			.deletedAt(LocalDateTime.now())

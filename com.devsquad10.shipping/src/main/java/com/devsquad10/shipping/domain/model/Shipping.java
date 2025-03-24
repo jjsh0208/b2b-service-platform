@@ -12,7 +12,7 @@ import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import com.devsquad10.shipping.application.dto.message.ShippingCreateResponse;
+import com.devsquad10.shipping.application.dto.message.ShippingResponseMessage;
 import com.devsquad10.shipping.application.dto.response.ShippingResDto;
 import com.devsquad10.shipping.domain.enums.ShippingStatus;
 
@@ -82,8 +82,6 @@ public class Shipping {
 
 	@Column
 	private Date deadLine;
-	// @Column
-	// private String deadLine;
 
 	@OneToMany(mappedBy = "shipping", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	private List<ShippingHistory> historyList = new ArrayList<>();
@@ -136,15 +134,22 @@ public class Shipping {
 	}
 
 	public ShippingResDto toResponseDto() {
-		return new ShippingResDto(
-			this.id,
-			this.status,
-			this.orderId
-		);
+		return ShippingResDto.builder()
+			.id(this.id)
+			.status(this.status)
+			.departureHubId(this.departureHubId)
+			.destinationHubId(this.destinationHubId)
+			.orderId(this.orderId)
+			.address(this.address)
+			.recipientName(this.recipientName)
+			.recipientSlackId(this.recipientSlackId)
+			.requestDetails(this.requestDetails)
+			.deadLine(this.deadLine)
+			.build();
 	}
 
-	public ShippingCreateResponse toShippingCreateMessage() {
-		return ShippingCreateResponse.builder()
+	public ShippingResponseMessage toShippingResponseMessage() {
+		return ShippingResponseMessage.builder()
 			.shippingId(this.id)
 			.orderId(this.orderId)
 			.status("SUCCESS")

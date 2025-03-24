@@ -1,0 +1,142 @@
+package com.devsquad10.message.application.service;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestClient;
+
+import com.devsquad10.message.application.dto.req.SlackIncomingHookDto;
+import com.devsquad10.message.application.dto.req.SlackMessageRequestDto;
+import com.devsquad10.message.application.dto.res.MessageResponseDto;
+import com.devsquad10.message.application.exception.SlackApiException;
+import com.devsquad10.message.application.exception.SlackUserNotFoundException;
+import com.devsquad10.message.domain.model.Message;
+import com.devsquad10.message.domain.repository.MessageRepository;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class SlackService {
+	private final MessageRepository messageRepository;
+	private final ObjectMapper objectMapper;
+	private final RestClient restClient;
+
+	@Value("${slack.api.token}")
+	private String slackOAuthToken;
+
+	@Value("${slack.api.url}")
+	private String slackUrl;
+
+	@Transactional
+	public MessageResponseDto sendMessage(SlackMessageRequestDto requestDto) {
+		Message message = Message.builder()
+			.message(requestDto.getMessage())
+			.recipientId(requestDto.getReceiverId())
+			.build();
+
+		Message savedMessage = messageRepository.save(message);
+
+		// 사용자 ID를 얻어오기 위해 username을 통해 ID를 찾음
+		String userId = getSlackUserIdByUsername(requestDto.getReceiverId());
+
+		if (userId != null) {
+			String messageText = "<@" + userId + "> " + requestDto.getMessage();
+
+			// SlackIncomingHookDto 객체 생성 후 메시지 전송
+			SlackIncomingHookDto hookRequest = SlackIncomingHookDto.builder()
+				.channel(requestDto.getChannel())
+				.text(messageText)
+				.build();
+
+			restClient.post()
+				.uri(slackUrl)
+				.contentType(MediaType.APPLICATION_JSON)
+				.body(hookRequest)
+				.retrieve()
+				.toBodilessEntity();
+
+		} else {
+			throw new SlackUserNotFoundException("슬랙 사용자를 찾을 수 없습니다: " + requestDto.getReceiverId());
+		}
+
+		return MessageResponseDto.fromEntity(savedMessage);
+	}
+
+	/**
+	 * Slack 사용자 목록에서 username에 해당하는 사용자의 Slack ID를 찾는 메서드
+	 * @param username Slack 사용자 이름
+	 * @return 사용자 ID
+	 */
+	public String getSlackUserIdByUsername(String username) {
+		String url = "https://slack.com/api/users.list";
+
+		// Slack API에 요청을 보낼 헤더 설정
+		HttpHeaders headers = new HttpHeaders();
+		headers.set("Authorization", "Bearer " + slackOAuthToken);
+		HttpEntity<String> entity = new HttpEntity<>(headers);
+
+		// Slack API 호출
+		String responseBody = restClient.get()
+			.uri(url)
+			.header("Authorization", "Bearer " + slackOAuthToken)
+			.retrieve()
+			.body(String.class);
+
+		if (responseBody != null) {
+			List<String> userIds = parseUserList(responseBody, username);
+
+			if (!userIds.isEmpty()) {
+				return userIds.get(0);  // 첫 번째 일치하는 사용자의 ID를 반환
+			}
+		}
+
+		// 사용자를 찾지 못하면 null 반환
+		return null;
+	}
+
+	/**
+	 * JSON 응답에서 사용자 목록을 파싱하여 username과 일치하는 사용자 ID를 찾는 메서드
+	 * @param jsonResponse Slack API 응답 JSON
+	 * @param username Slack 사용자 이름
+	 * @return 사용자 ID 목록
+	 */
+	private List<String> parseUserList(String jsonResponse, String username) {
+		List<String> userIds = new ArrayList<>();
+
+		try {
+			//  Jackson ObjectMapper를 사용하여 JSON 응답 파싱
+			JsonNode rootNode = objectMapper.readTree(jsonResponse);
+			JsonNode membersNode = rootNode.path("members");
+
+			// 사용자 목록 순회하여 일치하는 사용자 ID를 찾음
+			for (JsonNode memberNode : membersNode) {
+				String realName = memberNode.path("real_name").asText();
+				String userId = memberNode.path("id").asText();
+
+				// 사용자 이름이 일치하는 경우 해당 사용자 ID를 목록에 추가
+				if (realName.equalsIgnoreCase(username)) {
+					userIds.add(userId);
+				}
+
+				// 만약 real_name이 아닌 profile.display_name을 사용하려면:
+				// String displayName = memberNode.path("profile").path("display_name").asText();
+				// if (displayName.equalsIgnoreCase(username)) {
+				//     userIds.add(userId);
+				// }
+			}
+		} catch (Exception e) {
+			throw new SlackApiException("사용자 목록 파싱 실패: " + e.getMessage());
+		}
+
+		return userIds;
+	}
+}
