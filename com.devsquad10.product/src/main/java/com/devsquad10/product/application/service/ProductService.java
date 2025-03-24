@@ -88,16 +88,30 @@ public class ProductService {
 		if (hubId == null)
 			throw new EntityNotFoundException("Supplier Fot Found By Id : " + productReqDto.getSupplierId());
 
-		return productRepository.save(targetProduct.toBuilder()
+		// 상태 변경 로직 최적화
+		int productQuantity = targetProduct.getQuantity();
+		int newQuantity = productReqDto.getQuantity();
+
+		// SOLD_OUT 상태에서 수량이 증가하면 상태 변경
+		if (targetProduct.getStatus().equals(ProductStatus.SOLD_OUT) && productQuantity < newQuantity) {
+			targetProduct = targetProduct.toBuilder()
+				.status(ProductStatus.AVAILABLE)  // 상태 변경
+				.build();
+		}
+
+		// 업데이트된 Product 저장
+		targetProduct = targetProduct.toBuilder()
 			.name(productReqDto.getName())
 			.description(productReqDto.getDescription())
 			.price(productReqDto.getPrice())
-			.quantity(productReqDto.getQuantity())
+			.quantity(newQuantity)  // 수량 업데이트
 			.supplierId(productReqDto.getSupplierId())
 			.hubId(hubId)
 			.updatedAt(LocalDateTime.now())
 			.updatedBy(userId)
-			.build()).toResponseDto();
+			.build();
+
+		return productRepository.save(targetProduct).toResponseDto();
 	}
 
 	@Caching(evict = {
