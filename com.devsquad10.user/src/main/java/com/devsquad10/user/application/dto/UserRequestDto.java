@@ -1,5 +1,8 @@
 package com.devsquad10.user.application.dto;
 
+import java.util.UUID;
+
+import com.devsquad10.user.domain.model.ShippingAgentType;
 import com.devsquad10.user.domain.model.UserRoleEnum;
 
 import jakarta.validation.constraints.Email;
@@ -27,4 +30,6 @@ public class UserRequestDto {
 	private String slackId;
 	private UserRoleEnum role;
 	private String masterKey;
+	private UUID hubId;
+	private ShippingAgentType type;
 }
