@@ -22,6 +22,7 @@ import com.devsquad10.message.domain.repository.MessageRepository;
 import com.devsquad10.message.infrastructure.client.ShippingClient;
 import com.devsquad10.message.infrastructure.client.dto.ShippingClientDataRequestDto;
 import com.devsquad10.message.infrastructure.client.dto.ShippingClientDataResponseDto;
+import com.devsquad10.message.infrastructure.client.dto.SoldOutMessageRequest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -85,11 +86,6 @@ public class SlackService {
 	 */
 	public String getSlackUserIdByUsername(String username) {
 		String url = "https://slack.com/api/users.list";
-
-		// Slack API에 요청을 보낼 헤더 설정
-		HttpHeaders headers = new HttpHeaders();
-		headers.set("Authorization", "Bearer " + slackOAuthToken);
-		HttpEntity<String> entity = new HttpEntity<>(headers);
 
 		// Slack API 호출
 		String responseBody = restClient.get()

@@ -25,6 +25,7 @@ import com.devsquad10.message.application.dto.res.MessageUpdateResponseDto;
 import com.devsquad10.message.application.dto.res.PagedMessageResponseDto;
 import com.devsquad10.message.application.service.MessageService;
 import com.devsquad10.message.application.service.SlackService;
+import com.devsquad10.message.infrastructure.client.dto.ShippingClientDataResponseDto;
 import com.devsquad10.message.infrastructure.client.dto.SoldOutMessageRequest;
 
 import jakarta.validation.Valid;
