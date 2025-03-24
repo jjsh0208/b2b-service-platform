@@ -22,6 +22,7 @@ import com.devsquad10.message.domain.repository.MessageRepository;
 import com.devsquad10.message.infrastructure.client.ShippingClient;
 import com.devsquad10.message.infrastructure.client.dto.ShippingClientDataRequestDto;
 import com.devsquad10.message.infrastructure.client.dto.ShippingClientDataResponseDto;
+import com.devsquad10.message.infrastructure.client.dto.SoldOutMessageRequest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
