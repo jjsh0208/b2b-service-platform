@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import com.devsquad10.shipping.infrastructure.client.dto.UserInfoFeignClientRequest;
 
-@FeignClient(name = "user", url = "http://localhost:19099/api/user")
+@FeignClient(name = "user", url = "http://user:8080/api/user")
 public interface UserClient {
 	@GetMapping("/info/{id}")
 	UserInfoFeignClientRequest getUserInfoRequest(@PathVariable("id") UUID id);

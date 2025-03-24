@@ -8,6 +8,8 @@ services:
     ports:
       - 6379:6379
       - 8001:8001
+    networks:
+      - b2b-network
 
   rabbitmq:
     image: rabbitmq:management
@@ -20,6 +22,8 @@ services:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
     restart: unless-stopped
+    networks:
+      - b2b-network
 
   zipkin:
     image: openzipkin/zipkin
@@ -29,7 +33,27 @@ services:
     environment:
       - ZIPKIN_HTTP_PORT=9411
     restart: always
+    networks:
+      - b2b-network
+
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: b2b
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    networks:
+      - b2b-network
 
 volumes:
   service_data:
     driver: local
+
+networks:
+  b2b-network:
+    external: true
+
