@@ -21,7 +21,6 @@ import com.devsquad10.message.application.dto.req.SlackMessageRequestDto;
 import com.devsquad10.message.application.dto.res.ApiResponse;
 import com.devsquad10.message.application.dto.res.MessageCreateResponseDto;
 import com.devsquad10.message.application.dto.res.MessageGetOneResponseDto;
-import com.devsquad10.message.application.dto.res.MessageResponseDto;
 import com.devsquad10.message.application.dto.res.MessageUpdateResponseDto;
 import com.devsquad10.message.application.dto.res.PagedMessageResponseDto;
 import com.devsquad10.message.application.service.MessageService;
@@ -110,16 +109,9 @@ public class MessageController {
 		slackService.sendMessage(slackMessageReqDto);
 	}
 
-	@PostMapping("/shipping-time/{orderId}")
-	public ResponseEntity<ApiResponse<MessageResponseDto>> generateAndSendShippingTimeMessage(
-		@PathVariable UUID orderId
-	) {
-		MessageResponseDto generatedMessage = slackService.sendShippingTimeNotification(orderId);
-
-		return ResponseEntity.ok(ApiResponse.success(
-			HttpStatus.OK.value(),
-			generatedMessage
-		));
+	@GetMapping("/shipping-time/{orderId}")
+	ShippingClientDataResponseDto getShippingClientData(@PathVariable(name = "orderId") UUID orderId) {
+		return slackService.sendShippingTimeNotification(orderId);
 	}
 
 	@PostMapping("/stock-depletion")

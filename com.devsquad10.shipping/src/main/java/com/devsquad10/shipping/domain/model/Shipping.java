@@ -144,7 +144,12 @@ public class Shipping {
 			.recipientName(this.recipientName)
 			.recipientSlackId(this.recipientSlackId)
 			.requestDetails(this.requestDetails)
+			.companyShippingManagerId(this.getCompanyShippingManagerId())
 			.deadLine(this.deadLine)
+			.createdAt(this.createdAt)
+			// .createdBy(this.createdBy)
+			.updatedAt(this.updatedAt)
+			// .updatedBy(this.updatedBy)
 			.build();
 	}
 

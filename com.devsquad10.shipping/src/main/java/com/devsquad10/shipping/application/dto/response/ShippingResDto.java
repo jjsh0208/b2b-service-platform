@@ -29,6 +29,7 @@ public class ShippingResDto implements Serializable {
 	private String recipientName;
 	private String recipientSlackId;
 	private String requestDetails;
+	private UUID companyShippingManagerId;
 	private Date deadLine;
 	private LocalDateTime createdAt;
 	private UUID createdBy;
