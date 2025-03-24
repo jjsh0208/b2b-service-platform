@@ -2,6 +2,7 @@ package com.devsquad10.message.application.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -14,13 +15,17 @@ import org.springframework.web.client.RestClient;
 import com.devsquad10.message.application.dto.req.SlackIncomingHookDto;
 import com.devsquad10.message.application.dto.req.SlackMessageRequestDto;
 import com.devsquad10.message.application.dto.res.MessageResponseDto;
+import com.devsquad10.message.application.exception.MessageProcessingException;
 import com.devsquad10.message.application.exception.SlackApiException;
 import com.devsquad10.message.application.exception.SlackUserNotFoundException;
 import com.devsquad10.message.domain.model.Message;
 import com.devsquad10.message.domain.repository.MessageRepository;
+import com.devsquad10.message.infrastructure.client.ShippingClient;
+import com.devsquad10.message.infrastructure.client.dto.ShippingClientData;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -29,8 +34,10 @@ public class SlackService {
 	private final MessageRepository messageRepository;
 	private final ObjectMapper objectMapper;
 	private final RestClient restClient;
+	private final AiService aiService;
+	private final ShippingClient shippingClient;
 
-	@Value("${slack.api.token}")
+	@Value("${slack.api.key}")
 	private String slackOAuthToken;
 
 	@Value("${slack.api.url}")
@@ -138,5 +145,42 @@ public class SlackService {
 		}
 
 		return userIds;
+	}
+
+	// TODO : 동작 검증 필요
+	@Transactional
+	public MessageResponseDto sendShippingTimeNotification(UUID orderId) {
+		try {
+			// 배송 정보 조회
+			ShippingClientData shippingData = shippingClient.getShippingClientData(orderId);
+
+			if (shippingData == null) {
+				throw new EntityNotFoundException("주문 ID에 해당하는 배송 정보를 찾을 수 없습니다: " + orderId);
+			}
+
+			// AiService를 통한 메시지 생성
+			String generatedMessage = aiService.generateShippingTimeMessage(shippingData);
+
+			// 메시지 저장
+			Message message = Message.builder()
+				.message(generatedMessage)
+				.recipientId(shippingData.getShippingManagerSlackId())
+				.build();
+
+			Message savedMessage = messageRepository.save(message);
+
+			// Slack 메시지 전송
+			SlackMessageRequestDto requestDto = SlackMessageRequestDto.builder()
+				.receiverId(shippingData.getShippingManagerName())
+				.message(generatedMessage)
+				.channel("#shipping-message")
+				.build();
+
+			sendMessage(requestDto);
+
+			return MessageResponseDto.fromEntity(savedMessage);
+		} catch (Exception e) {
+			throw new MessageProcessingException("메시지 처리 중 오류가 발생했습니다.");
+		}
 	}
 }
