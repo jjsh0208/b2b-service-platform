@@ -87,11 +87,6 @@ public class SlackService {
 	public String getSlackUserIdByUsername(String username) {
 		String url = "https://slack.com/api/users.list";
 
-		// Slack API에 요청을 보낼 헤더 설정
-		HttpHeaders headers = new HttpHeaders();
-		headers.set("Authorization", "Bearer " + slackOAuthToken);
-		HttpEntity<String> entity = new HttpEntity<>(headers);
-
 		// Slack API 호출
 		String responseBody = restClient.get()
 			.uri(url)
