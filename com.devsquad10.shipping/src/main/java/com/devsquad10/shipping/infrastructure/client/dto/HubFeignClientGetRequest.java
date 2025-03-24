@@ -1,12 +1,18 @@
-package com.devsquad10.shipping.infrastructure.client;
+package com.devsquad10.shipping.infrastructure.client.dto;
 
 import java.util.UUID;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class HubFeignClientGetRequest {
 
 	// 유저:기본키(id) = 배송담당자 ID(shipping_manager_id)
@@ -15,6 +21,6 @@ public class HubFeignClientGetRequest {
 	private UUID departureHubId; // 허브1 ID
 	private UUID destinationHubId; // 허브3 ID
 	private Integer time;
-	private Integer distance;
+	private Double distance;
 }
 

@@ -4,6 +4,9 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/com.devsquad10.common/b2b.com.devsquad10.common.main.iml" filepath="$PROJECT_DIR$/.idea/modules/com.devsquad10.common/b2b.com.devsquad10.common.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/com.devsquad10.company/b2b.com.devsquad10.company.main.iml" filepath="$PROJECT_DIR$/.idea/modules/com.devsquad10.company/b2b.com.devsquad10.company.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/com.devsquad10.gateway/b2b.com.devsquad10.gateway.main.iml" filepath="$PROJECT_DIR$/.idea/modules/com.devsquad10.gateway/b2b.com.devsquad10.gateway.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/com.devsquad10.hub/b2b.com.devsquad10.hub.main.iml" filepath="$PROJECT_DIR$/.idea/modules/com.devsquad10.hub/b2b.com.devsquad10.hub.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/com.devsquad10.message/b2b.com.devsquad10.message.main.iml" filepath="$PROJECT_DIR$/.idea/modules/com.devsquad10.message/b2b.com.devsquad10.message.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/com.devsquad10.order/b2b.com.devsquad10.order.main.iml" filepath="$PROJECT_DIR$/.idea/modules/com.devsquad10.order/b2b.com.devsquad10.order.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/com.devsquad10.product/b2b.com.devsquad10.product.main.iml" filepath="$PROJECT_DIR$/.idea/modules/com.devsquad10.product/b2b.com.devsquad10.product.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/com.devsquad10.user/b2b.com.devsquad10.user.main.iml" filepath="$PROJECT_DIR$/.idea/modules/com.devsquad10.user/b2b.com.devsquad10.user.main.iml" />

@@ -1,4 +1,4 @@
-package com.devsquad10.order.application.dto.message;
+package com.devsquad10.shipping.application.dto.message;
 
 import java.util.UUID;
 
@@ -13,7 +13,7 @@ import lombok.ToString;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ShippingCreateResponse {
+public class ShippingResponseMessage {
 
 	private UUID orderId; // 주문 ID
 

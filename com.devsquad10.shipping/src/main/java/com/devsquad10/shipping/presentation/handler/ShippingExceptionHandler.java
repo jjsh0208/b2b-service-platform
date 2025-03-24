@@ -7,10 +7,11 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.devsquad10.shipping.application.dto.ShippingResponse;
+import com.devsquad10.shipping.application.exception.shipping.ShippingCreateException;
 import com.devsquad10.shipping.application.exception.shipping.ShippingNotFoundException;
 
 @RestControllerAdvice
-public class ShippingHandler {
+public class ShippingExceptionHandler {
 
 	// 배송,배송 경로 기록 - 커스텀 예외 처리
 	// 배송Id 존재X
@@ -19,5 +20,12 @@ public class ShippingHandler {
 	public ResponseEntity<ShippingResponse<String>> handlerShippingNotFoundException(ShippingNotFoundException e) {
 		return ResponseEntity.status(HttpStatus.NOT_FOUND)
 			.body(ShippingResponse.failure(HttpStatus.NOT_FOUND.value(), e.getMessage()));
+	}
+	// 배송 생성 시, 실패
+	@ExceptionHandler(ShippingCreateException.class)
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public ResponseEntity<ShippingResponse<String>> handlerShippingCreateException(ShippingCreateException e) {
+		return ResponseEntity.status(HttpStatus.NO_CONTENT)
+			.body(ShippingResponse.failure(HttpStatus.NO_CONTENT.value(), e.getMessage()));
 	}
 }

@@ -107,6 +107,13 @@ fabric.properties
 # https://plugins.jetbrains.com/plugin/7973-sonarlint
 .idea/**/sonarlint/
 
+
+# .idea 폴더 전체 제외
+.idea/
+
+# .idea 폴더 내 모든 파일 제외
+.idea/**
+
 # SonarQube Plugin
 # https://plugins.jetbrains.com/plugin/7238-sonarqube-community-plugin
 .idea/**/sonarIssues.xml

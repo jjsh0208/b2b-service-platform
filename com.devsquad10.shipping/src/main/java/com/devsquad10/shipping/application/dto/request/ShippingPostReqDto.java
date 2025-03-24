@@ -13,5 +13,5 @@ public class ShippingPostReqDto {
 
 	private String recipientName;
 
-	private String recipientPhone;
+	private String recipientSlackId;
 }

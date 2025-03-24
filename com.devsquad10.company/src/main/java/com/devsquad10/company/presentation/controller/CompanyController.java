@@ -2,7 +2,6 @@ package com.devsquad10.company.presentation.controller;
 
 import java.util.UUID;
 
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -18,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.devsquad10.company.application.dto.CompanyReqDto;
 import com.devsquad10.company.application.dto.CompanyResDto;
+import com.devsquad10.company.application.dto.PageCompanyResponseDto;
 import com.devsquad10.company.application.dto.ShippingCompanyInfoDto;
 import com.devsquad10.company.application.dto.response.CompanyResponse;
 import com.devsquad10.company.application.service.CompanyService;
@@ -47,7 +47,7 @@ public class CompanyController {
 	}
 
 	@GetMapping("/search")
-	public ResponseEntity<CompanyResponse<Page<CompanyResDto>>> searchCompanies(
+	public ResponseEntity<CompanyResponse<PageCompanyResponseDto>> searchCompanies(
 		@RequestParam(required = false) String q,
 		@RequestParam(required = false) String category,
 		@RequestParam(defaultValue = "0") int page,
@@ -76,17 +76,17 @@ public class CompanyController {
 	}
 
 	@GetMapping("/exists/{uuid}")
-	public UUID findSupplierHubIdByCompanyId(@PathVariable UUID uuid) {
+	public UUID findSupplierHubIdByCompanyId(@PathVariable("uuid") UUID uuid) {
 		return companyService.findSupplierHubIdByCompanyId(uuid);  // 존재하면 hubId, 없으면 null
 	}
 
 	@GetMapping("/address/{id}")
-	public String findRecipientAddressByCompanyId(@PathVariable UUID id) {
+	public String findRecipientAddressByCompanyId(@PathVariable("id") UUID id) {
 		return companyService.findRecipientAddressByCompanyId(id);
 	}
 
 	@GetMapping("/info/{id}")
-	public ShippingCompanyInfoDto findShippingCompanyInfo(@PathVariable UUID id) {
+	public ShippingCompanyInfoDto findShippingCompanyInfo(@PathVariable("id") UUID id) {
 		return companyService.findShippingCompanyInfo(id);
 	}
 }

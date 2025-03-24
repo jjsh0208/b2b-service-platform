@@ -2,6 +2,7 @@ package com.devsquad10.shipping.domain.model;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -11,6 +12,7 @@ import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import com.devsquad10.shipping.application.dto.message.ShippingResponseMessage;
 import com.devsquad10.shipping.application.dto.response.ShippingResDto;
 import com.devsquad10.shipping.domain.enums.ShippingStatus;
 
@@ -60,7 +62,7 @@ public class Shipping {
 	@Column(nullable = false)
 	private UUID destinationHubId;
 
-	@Column
+	@Column(nullable = false)
 	private UUID orderId;
 
 	@Column(nullable = false)
@@ -70,13 +72,16 @@ public class Shipping {
 	private String recipientName;
 
 	@Column(nullable = false)
-	private String recipientPhone;
+	private String recipientSlackId;
 
 	@Column
 	private String requestDetails;
 
 	@Column(nullable = true)
 	private UUID companyShippingManagerId;
+
+	@Column
+	private Date deadLine;
 
 	@OneToMany(mappedBy = "shipping", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	private List<ShippingHistory> historyList = new ArrayList<>();
@@ -129,11 +134,26 @@ public class Shipping {
 	}
 
 	public ShippingResDto toResponseDto() {
-		return new ShippingResDto(
-			this.id,
-			this.status,
-			this.orderId
-		);
+		return ShippingResDto.builder()
+			.id(this.id)
+			.status(this.status)
+			.departureHubId(this.departureHubId)
+			.destinationHubId(this.destinationHubId)
+			.orderId(this.orderId)
+			.address(this.address)
+			.recipientName(this.recipientName)
+			.recipientSlackId(this.recipientSlackId)
+			.requestDetails(this.requestDetails)
+			.deadLine(this.deadLine)
+			.build();
+	}
+
+	public ShippingResponseMessage toShippingResponseMessage() {
+		return ShippingResponseMessage.builder()
+			.shippingId(this.id)
+			.orderId(this.orderId)
+			.status("SUCCESS")
+			.build();
 	}
 
 	// public void addShippingHistory(ShippingHistory shippingHistory) {

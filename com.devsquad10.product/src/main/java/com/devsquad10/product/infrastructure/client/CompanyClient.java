@@ -1,4 +1,4 @@
-package com.devsquad10.order.application.client;
+package com.devsquad10.product.infrastructure.client;
 
 import java.util.UUID;
 
@@ -9,6 +9,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 @FeignClient(name = "${feign.client.company.name}", url = "${feign.client.company.url}")
 public interface CompanyClient {
 
-	@GetMapping("/address/{id}")
-	String findRecipientAddressByCompanyId(@PathVariable UUID id);
+	@GetMapping("/exists/{uuid}")
+	UUID findSupplierHubIdByCompanyId(@PathVariable("uuid") UUID uuid);
 }

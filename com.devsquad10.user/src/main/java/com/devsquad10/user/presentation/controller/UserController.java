@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.devsquad10.user.application.dto.UserInfoFeignClientResponse;
 import com.devsquad10.user.application.dto.UserLoginRequestDto;
 import com.devsquad10.user.application.dto.UserRequestDto;
 import com.devsquad10.user.application.dto.UserResponseDto;
@@ -85,5 +86,15 @@ public class UserController {
 		userService.deleteUser(id);
 		return ResponseEntity.status(HttpStatus.OK)
 			.body("유저 삭제 완료");
+	}
+
+	@GetMapping("/info/{id}")
+	UserInfoFeignClientResponse getUserInfoRequest(@PathVariable("id") UUID id) {
+		log.info("유저 정보 조회");
+		UserInfoFeignClientResponse userInfo = userService.getUserInfoRequest(id);
+		if (userInfo == null) {
+			return null;
+		}
+		return userInfo;
 	}
 }

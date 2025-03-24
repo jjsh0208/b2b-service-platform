@@ -3,11 +3,11 @@ package com.devsquad10.order.application.service;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import com.devsquad10.order.application.client.CompanyClient;
 import com.devsquad10.order.application.dto.message.ShippingCreateRequest;
-import com.devsquad10.order.application.dto.message.ShippingCreateResponse;
+import com.devsquad10.order.application.dto.message.ShippingResponseMessage;
 import com.devsquad10.order.application.dto.message.StockDecrementMessage;
 import com.devsquad10.order.application.dto.message.StockReversalMessage;
 import com.devsquad10.order.application.exception.OrderNotFoundException;
@@ -15,6 +15,7 @@ import com.devsquad10.order.application.messaging.OrderMessageService;
 import com.devsquad10.order.domain.enums.OrderStatus;
 import com.devsquad10.order.domain.model.Order;
 import com.devsquad10.order.domain.repository.OrderRepository;
+import com.devsquad10.order.infrastructure.client.CompanyClient;
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,6 +26,9 @@ public class OrderEventService {
 	private final OrderRepository orderRepository;
 	private final CompanyClient companyClient;
 	private final OrderMessageService orderMessageService;
+	private final RedisTemplate<String, String> redisTemplate;
+
+	private static final String RETRY_COUNT_KEY_PREFIX = "shipping_retry_count:";
 
 	/**
 	 * 재고 차감 메시지가 수신되면 해당 주문에 대해 배송 요청을 처리한다.
@@ -53,20 +57,34 @@ public class OrderEventService {
 	/**
 	 * 배송 생성이 성공하면  "WAITING_FOR_SHIPMENT" (배송 대기) 상태로 변경한다.
 	 *
-	 * @param shippingCreateResponse 배송 생성 응답 메시지
+	 * @param shippingResponseMessage 배송 생성 응답 메시지
 	 */
-	public void updateOrderStatusToWaitingForShipment(ShippingCreateResponse shippingCreateResponse) {
-		Order targetOrder = findOrderById(shippingCreateResponse.getOrderId());
+	public void updateOrderStatusToWaitingForShipment(ShippingResponseMessage shippingResponseMessage) {
+		Order targetOrder = findOrderById(shippingResponseMessage.getOrderId());
 		updateOrderStatus(targetOrder, OrderStatus.WAITING_FOR_SHIPMENT);
 	}
 
 	/**
 	 * 배송 생성 실패 시 재시도 요청을 한다.
 	 *
-	 * @param shippingCreateResponse 배송 생성 응답 메시지
+	 * @param shippingResponseMessage 배송 생성 응답 메시지
 	 */
-	public void retryCreateShipping(ShippingCreateResponse shippingCreateResponse) {
-		Order targetOrder = findOrderById(shippingCreateResponse.getOrderId());
+	public void retryCreateShipping(ShippingResponseMessage shippingResponseMessage) {
+
+		// Redis에서 재시도 카운트를 가져옴
+		String orderId = shippingResponseMessage.getOrderId().toString();
+		String retryCountKey = RETRY_COUNT_KEY_PREFIX + orderId;
+
+		String retryCountStr = redisTemplate.opsForValue().get(retryCountKey);
+		int retryCount = (retryCountStr != null) ? Integer.parseInt(retryCountStr) : 0;
+
+		// 3회 이상 재시도한 경우 상태를 'ORDER_RECEIVED'로 변경하고 종료
+		if (retryCount >= 3) {
+			updateOrderStatus(findOrderById(shippingResponseMessage.getOrderId()), OrderStatus.ORDER_FAILED);
+			return;
+		}
+
+		Order targetOrder = findOrderById(shippingResponseMessage.getOrderId());
 		Optional<String> recipientsAddress = findRecipientAddress(targetOrder.getRecipientsId());
 
 		StockDecrementMessage stockDecrementMessage = StockDecrementMessage.builder()
@@ -74,6 +92,9 @@ public class OrderEventService {
 			.build();
 
 		processShippingRequest(targetOrder, stockDecrementMessage, recipientsAddress);
+
+		// Redis에 재시도 카운트를 저장
+		redisTemplate.opsForValue().set(retryCountKey, String.valueOf(retryCount + 1));
 	}
 
 	/*** 공통 로직 ***/

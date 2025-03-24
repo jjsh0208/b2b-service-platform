@@ -1,4 +1,4 @@
-package com.devsquad10.company.application.client;
+package com.devsquad10.company.infrastructure.client;
 
 import java.util.UUID;
 
@@ -10,5 +10,5 @@ import org.springframework.web.bind.annotation.PathVariable;
 public interface HubClient {
 
 	@GetMapping("/exists/{uuid}")
-	Boolean isHubExists(@PathVariable UUID uuid);
+	Boolean isHubExists(@PathVariable("uuid") UUID uuid);
 }
