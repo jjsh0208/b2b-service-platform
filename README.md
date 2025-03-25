@@ -198,9 +198,16 @@ b2b-project/                         # B2B 루트 프로젝트
 방지- [wiki 보기](https://github.com/DevSquad10/b2b-service-platform/wiki/%5BTrouble-Shooting%5D-%5B%EC%8A%B9%ED%98%84%5D-saga-pattern-%EB%AC%B4%ED%95%9C-%EC%9E%AC%EC%8B%9C%EB%8F%84-%EB%B0%A9%EC%A7%80)
 
 [승현] RabbitMQ concurrency 설정과 비관적 락을 활용한 재고 감소 동시성
-제어 - [wiki 보기](https://github.com/DevSquad10/b2b-service-platform/wiki)
+제어 - [wiki 보기](https://github.com/DevSquad10/b2b-service-platform/wiki/%5BTrouble-Shooting%5D-%5B%EC%8A%B9%ED%98%84%5D-RabbitMQ-concurrency-%EC%84%A4%EC%A0%95%EA%B3%BC-%EB%B9%84%EA%B4%80%EC%A0%81-%EB%9D%BD%EC%9D%84-%ED%99%9C%EC%9A%A9%ED%95%9C-%EC%9E%AC%EA%B3%A0-%EA%B0%90%EC%86%8C-%EB%8F%99%EC%8B%9C%EC%84%B1-%EC%A0%9C%EC%96%B4)
 
-[승욱] SpringBoot server port 오류 - [wiki 보기](https://github.com/DevSquad10/b2b-service-platform/wiki)
+[승욱] SpringBoot server port
+오류 - [wiki 보기](https://github.com/DevSquad10/b2b-service-platform/wiki/%5BTrouble-Shooting%5D-%5B%EC%8A%B9%EC%9A%B1%5D-SpringBoot-server-port-%EC%98%A4%EB%A5%98)
+
+[민지] JPQL 날짜
+비교 - [wiki 보기](https://github.com/DevSquad10/b2b-service-platform/wiki/%5BTrouble-Shooting%5D-%5B%EB%AF%BC%EC%A7%80%5D-JPQL-%EB%82%A0%EC%A7%9C-%EB%B9%84%EA%B5%90)
+
+[지웅] 허브 간 계산 알고리즘 성능 최적화 -
+[wiki 보기](https://github.com/DevSquad10/b2b-service-platform/wiki/%5BTrouble-Shooting%5D-%5B%EC%A7%80%EC%9B%85%5D-%ED%97%88%EB%B8%8C-%EA%B0%84-%EA%B3%84%EC%82%B0-%EC%95%8C%EA%B3%A0%EB%A6%AC%EC%A6%98-%EC%84%B1%EB%8A%A5-%EC%B5%9C%EC%A0%81%ED%99%94)
 
 ## ⚙️ 적용 기술
 
