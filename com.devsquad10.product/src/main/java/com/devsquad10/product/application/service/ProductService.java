@@ -34,7 +34,7 @@ public class ProductService {
 	private final CompanyClient companyClient;
 
 	@CachePut(cacheNames = "productCache", key = "#result.id")
-	public ProductResDto createProduct(ProductReqDto productReqDto) {
+	public ProductResDto createProduct(ProductReqDto productReqDto, String userId) {
 
 		// 특정 업체 존재 유무 확인
 		// feign client
@@ -52,6 +52,7 @@ public class ProductService {
 			.supplierId(productReqDto.getSupplierId())
 			.hubId(hubId)
 			.status(ProductStatus.AVAILABLE)
+			.createdBy(userId)
 			.build()).toResponseDto();
 	}
 
@@ -78,33 +79,52 @@ public class ProductService {
 	@Caching(evict = {
 		@CacheEvict(cacheNames = "productSearchCache", allEntries = true)
 	})
-	public ProductResDto updateProduct(UUID id, ProductReqDto productReqDto) {
+	public ProductResDto updateProduct(UUID id, ProductReqDto productReqDto, String userId) {
 		Product targetProduct = productRepository.findByIdAndDeletedAtIsNull(id)
 			.orElseThrow(() -> new ProductNotFoundException("Product Not Found By Id :" + id));
 
-		return productRepository.save(targetProduct.toBuilder()
+		UUID hubId = companyClient.findSupplierHubIdByCompanyId(productReqDto.getSupplierId());
+
+		if (hubId == null)
+			throw new EntityNotFoundException("Supplier Fot Found By Id : " + productReqDto.getSupplierId());
+
+		// 상태 변경 로직 최적화
+		int productQuantity = targetProduct.getQuantity();
+		int newQuantity = productReqDto.getQuantity();
+
+		// SOLD_OUT 상태에서 수량이 증가하면 상태 변경
+		if (targetProduct.getStatus().equals(ProductStatus.SOLD_OUT) && productQuantity < newQuantity) {
+			targetProduct = targetProduct.toBuilder()
+				.status(ProductStatus.AVAILABLE)  // 상태 변경
+				.build();
+		}
+
+		// 업데이트된 Product 저장
+		targetProduct = targetProduct.toBuilder()
 			.name(productReqDto.getName())
 			.description(productReqDto.getDescription())
 			.price(productReqDto.getPrice())
-			.quantity(productReqDto.getQuantity())
+			.quantity(newQuantity)  // 수량 업데이트
 			.supplierId(productReqDto.getSupplierId())
-			.hubId(productReqDto.getHubId())
+			.hubId(hubId)
 			.updatedAt(LocalDateTime.now())
-			.updatedBy("사용자")
-			.build()).toResponseDto();
+			.updatedBy(userId)
+			.build();
+
+		return productRepository.save(targetProduct).toResponseDto();
 	}
 
 	@Caching(evict = {
 		@CacheEvict(cacheNames = "productCache", key = "#id"),
 		@CacheEvict(cacheNames = "productSearchCache", key = "#id")
 	})
-	public void deleteProduct(UUID id) {
+	public void deleteProduct(UUID id, String userId) {
 		Product targetProduct = productRepository.findByIdAndDeletedAtIsNull(id)
 			.orElseThrow(() -> new ProductNotFoundException("Product Not Found By Id :" + id));
 
 		productRepository.save(targetProduct.toBuilder()
 			.deletedAt(LocalDateTime.now())
-			.deletedBy("사용자")
+			.deletedBy(userId)
 			.build());
 	}
 }
