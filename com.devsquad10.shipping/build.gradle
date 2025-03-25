@@ -1,34 +1,33 @@
 plugins {
-    id 'java'
-    id 'org.springframework.boot' version '3.3.9'
-    id 'io.spring.dependency-management' version '1.1.7'
+	id 'java'
+	id 'org.springframework.boot' version '3.3.9'
+	id 'io.spring.dependency-management' version '1.1.7'
 }
 
 group = 'com.devsquad10'
 version = '0.0.1-SNAPSHOT'
 
 java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
-    }
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(17)
+	}
 }
 
 configurations {
-    compileOnly {
-        extendsFrom annotationProcessor
-    }
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
 }
 
 repositories {
-    mavenCentral()
+	mavenCentral()
 }
 
 ext {
-    set('springCloudVersion', "2023.0.5")
+	set('springCloudVersion', "2023.0.5")
 }
 
 dependencies {
-
     // 분산 추적
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.micrometer:micrometer-tracing-bridge-brave'
@@ -38,40 +37,34 @@ dependencies {
     // feign client
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
 
-    // validation 설정
-    implementation 'org.springframework.boot:spring-boot-starter-validation'
+	// validation 설정
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
 
-//	// Jackson2JsonRedisSerializer 의존성
-//	implementation 'com.fasterxml.jackson.core:jackson-databind'
-//	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+	//queryDSL 의존성
+	implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
+	annotationProcessor "com.querydsl:querydsl-apt:5.0.0:jakarta"
+	annotationProcessor "jakarta.annotation:jakarta.annotation-api"
+	annotationProcessor "jakarta.persistence:jakarta.persistence-api"
 
-    //queryDSL 의존성
-    implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
-    implementation "com.querydsl:querydsl-core"
-    implementation "com.querydsl:querydsl-collections"
-    annotationProcessor "com.querydsl:querydsl-apt:5.0.0:jakarta"
-    annotationProcessor "jakarta.annotation:jakarta.annotation-api"
-    annotationProcessor "jakarta.persistence:jakarta.persistence-api"
-
-    // implementation project(":com.devsquad10.common")
-    implementation 'com.h2database:h2'
-    implementation 'org.springframework.boot:spring-boot-starter-amqp'
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
-    compileOnly 'org.projectlombok:lombok'
-    runtimeOnly 'org.postgresql:postgresql'
-    annotationProcessor 'org.projectlombok:lombok'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.springframework.amqp:spring-rabbit-test'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	// implementation project(":com.devsquad10.common")
+	implementation 'com.h2database:h2'
+	implementation 'org.springframework.boot:spring-boot-starter-amqp'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+	compileOnly 'org.projectlombok:lombok'
+	runtimeOnly 'org.postgresql:postgresql'
+	annotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.amqp:spring-rabbit-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 dependencyManagement {
-    imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
-    }
+	imports {
+		mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+	}
 }
 
 // Querydsl 설정
@@ -79,7 +72,7 @@ def generated = 'src/main/generated'
 
 // querydsl QClass 파일 생성 위치를 지정
 tasks.withType(JavaCompile) {
-    options.getGeneratedSourceOutputDirectory().set(file(generated))
+	options.getGeneratedSourceOutputDirectory().set(file(generated))
 }
 
 // java source set 에 querydsl QClass 위치 추가
@@ -89,7 +82,7 @@ sourceSets {
 
 // gradle clean 시에 QClass 디렉토리 삭제
 clean {
-    delete file(generated)
+	delete file(generated)
 }
 
 // 컴파일 플래그 설정

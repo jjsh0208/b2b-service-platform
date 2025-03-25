@@ -26,10 +26,11 @@ import com.devsquad10.shipping.domain.repository.ShippingHistoryRepository;
 import com.devsquad10.shipping.domain.repository.ShippingRepository;
 import com.devsquad10.shipping.infrastructure.client.CompanyClient;
 import com.devsquad10.shipping.infrastructure.client.HubClient;
+import com.devsquad10.shipping.infrastructure.client.HubRouteClient;
 import com.devsquad10.shipping.infrastructure.client.dto.HubFeignClientGetRequest;
 import com.devsquad10.shipping.infrastructure.client.dto.ShippingCompanyInfoDto;
 import com.devsquad10.shipping.infrastructure.client.UserClient;
-import com.devsquad10.shipping.infrastructure.client.dto.UserInfoFeignClientRequest;
+import com.devsquad10.shipping.infrastructure.client.dto.UserInfoFeignClientResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import feign.FeignException;
@@ -49,10 +50,10 @@ public class ShippingEventService {
 	private final ShippingAgentAllocation shippingAgentAllocation;
 	private final ShippingMessageService shippingMessageService;
 	private final HubClient hubClient;
+	private final HubRouteClient hubRouteClient;
 	private final CompanyClient companyClient;
 	private final UserClient userClient;
 
-	// TODO: 권한 확인 - MASTER
 	// 배송 & 배송 경로 기록 생성
 	public void handlerShippingCreateRequest(ShippingCreateMessage shippingCreateMessage) throws
 		JsonProcessingException {
@@ -66,7 +67,7 @@ public class ShippingEventService {
 			shippingCreateMessage);
 
 		// 도착허브Id에서 수령업체의 담당자ID로 User feign client 이름 조회하여 수령인 이름 및 슬랙Id 추출
-		UserInfoFeignClientRequest userInfo = userClient.getUserInfoRequest(recipientsInfo.getVenderId());
+		UserInfoFeignClientResponse userInfo = userClient.getUserInfoRequest(recipientsInfo.getVenderId());
 
 		Shipping shipping = Shipping.builder()
 			.status(ShippingStatus.HUB_WAIT)
@@ -78,7 +79,7 @@ public class ShippingEventService {
 				shippingCreateMessage.getRequestDetails() != null ? shippingCreateMessage.getRequestDetails() : "")
 			.recipientName(userInfo.getUsername())
 			.recipientSlackId(userInfo.getSlackId())
-			// TODO: shipping의 status가 HUB_ARV 될때 event 발생하여 업체 배송담당자 배정처리
+			// shipping status=HUB_ARV 될 때 업체 배송담당자 배정처리
 			.companyShippingManagerId(null)
 			.deadLine(shippingCreateMessage.getDeadLine())
 			.build();
@@ -152,7 +153,7 @@ public class ShippingEventService {
 		ShippingCreateMessage shippingCreateMessage) {
 
 		try {
-			List<HubFeignClientGetRequest> hubRouteInfo = hubClient.getHubRouteInfo(supplierIdInfo.getHubId(),
+			List<HubFeignClientGetRequest> hubRouteInfo = hubRouteClient.getHubRouteInfo(supplierIdInfo.getHubId(),
 				recipientsInfo.getHubId());
 			log.info("husRouteInfo.size(): {}", hubRouteInfo.size());
 
@@ -201,7 +202,7 @@ public class ShippingEventService {
 				.shippingManagerId(selectedHubShippingAgentId)
 				.estDist(route.getDistance())
 				.estTime(route.getTime())
-				// TODO: 실제 거리 및 시간 계산은 현재 위치 기반으로 정보를 수집하여 update 처리
+				// TODO: 실제 거리 및 시간 계산은 현재 위치 기반으로 정보를 수집하여 구현 예정
 				.actDist(route.getDistance() + 2.23)
 				.actTime(route.getTime() + 2342365)
 				.historyStatus(ShippingHistoryStatus.HUB_WAIT)
@@ -231,7 +232,7 @@ public class ShippingEventService {
 		ShippingCompanyInfoDto recipientsInfo = getRecipientsInfo(recipientsId, shippingUpdateMessage);
 
 		// 도착허브Id에서 수령업체의 담당자ID로 User feign client 이름 조회하여 수령인 이름 및 슬랙Id 추출
-		UserInfoFeignClientRequest userInfo = getUserInfo(recipientsInfo, shippingUpdateMessage);
+		UserInfoFeignClientResponse userInfo = getUserInfo(recipientsInfo, shippingUpdateMessage);
 
 		// 기존 배송 경로 기록 삭제 및 허브배송담당자 배송진행 여부(false) 변경 & 배정 횟수(assignmentCount--) 롤백
 		List<ShippingHistory> shippingHistories = shippingHistoryRepository.findByShippingIdAndDeletedAtIsNull(shipping.getId());
@@ -310,7 +311,7 @@ public class ShippingEventService {
 	}
 
 	// 도착허브Id에서 수령업체의 담당자ID로 User feign client 이름 조회하여 수령인 이름 및 슬랙Id 추출
-	private UserInfoFeignClientRequest getUserInfo(ShippingCompanyInfoDto recipientsInfo, ShippingUpdateMessage shippingUpdateMessage) {
+	private UserInfoFeignClientResponse getUserInfo(ShippingCompanyInfoDto recipientsInfo, ShippingUpdateMessage shippingUpdateMessage) {
 		try {
 			return userClient.getUserInfoRequest(recipientsInfo.getVenderId());
 		} catch (FeignException.FeignClientException e) {
@@ -327,7 +328,7 @@ public class ShippingEventService {
 		ShippingUpdateMessage shippingUpdateMessage) {
 
 		try {
-			List<HubFeignClientGetRequest> hubRouteUpdateInfo = hubClient.getHubRouteInfo(departureHubId,
+			List<HubFeignClientGetRequest> hubRouteUpdateInfo = hubRouteClient.getHubRouteInfo(departureHubId,
 				recipientsInfo.getHubId());
 			log.info("hubRouteUpdateInfo.size(): {}", hubRouteUpdateInfo.size());
 

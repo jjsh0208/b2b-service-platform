@@ -1,5 +1,7 @@
 package com.devsquad10.shipping.infrastructure.repository;
 
+import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -23,4 +25,9 @@ public interface JpaShippingRepository extends JpaRepository<Shipping, UUID>, Sh
 	Optional<Shipping> findByIdWithPessimisticLock(@Param("id") UUID id);
 
 	Optional<Shipping> findByOrderIdAndDeletedAtIsNull(UUID id);
+
+	@Query("SELECT s FROM Shipping s WHERE s.deletedAt is NULL "
+		+ "AND s.companyShippingManagerId is Not Null "
+		+ "AND FUNCTION('DATE', s.deadLine) = CURRENT_DATE")
+	List<Shipping> findShippingWithDeadlineToday();
 }

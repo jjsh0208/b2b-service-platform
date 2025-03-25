@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.devsquad10.shipping.application.dto.ShippingResponse;
+import com.devsquad10.shipping.application.exception.shipping.InvalidShippingStatusUpdateException;
 import com.devsquad10.shipping.application.exception.shipping.ShippingCreateException;
 import com.devsquad10.shipping.application.exception.shipping.ShippingNotFoundException;
 
@@ -27,5 +28,13 @@ public class ShippingExceptionHandler {
 	public ResponseEntity<ShippingResponse<String>> handlerShippingCreateException(ShippingCreateException e) {
 		return ResponseEntity.status(HttpStatus.NO_CONTENT)
 			.body(ShippingResponse.failure(HttpStatus.NO_CONTENT.value(), e.getMessage()));
+	}
+
+	// 배송 상태 이전 상태로 업데이트 불가
+	@ExceptionHandler(InvalidShippingStatusUpdateException.class)
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
+	public ResponseEntity<ShippingResponse<String>> handlerInvalidShippingStatusUpdateException(InvalidShippingStatusUpdateException e) {
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+			.body(ShippingResponse.failure(HttpStatus.BAD_REQUEST.value(), e.getMessage()));
 	}
 }

@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class UserInfoFeignClientRequest {
-	private String username;
-	private String slackId;
+public class OrderFeignClientDto {
+	private String productName; // 상품명
+	private Integer quantity; // 수량
 }

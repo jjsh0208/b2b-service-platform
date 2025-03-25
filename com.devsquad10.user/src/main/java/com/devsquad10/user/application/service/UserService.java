@@ -178,7 +178,10 @@ public class UserService {
 		User user = (User)userRepository.findByIdAndDeletedAtIsNull(id)
 			.orElseThrow(() -> new IllegalArgumentException("가입되지 않은 사용자입니다."));
 		log.info("유저 정보 조회 완료");
-		UserInfoFeignClientResponse userInfo = new UserInfoFeignClientResponse(user.getUsername(), user.getSlackId());
+		UserInfoFeignClientResponse userInfo = UserInfoFeignClientResponse.builder()
+			.username(user.getUsername())
+			.slackId(user.getSlackId())
+			.build();
 		return userInfo;
 	}
 

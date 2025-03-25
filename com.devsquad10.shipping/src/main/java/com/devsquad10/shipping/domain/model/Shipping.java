@@ -124,12 +124,11 @@ public class Shipping {
 		this.updatedBy = "updateUser";
 	}
 
-	// TODO: 삭제유저 구현 예정
+	// TODO: user 설정
 	// 소프트 삭제 처리
 	public Shipping softDelete() {
 		this.deletedAt = LocalDateTime.now();
 		this.deletedBy = "deleteUser";
-
 		return this;
 	}
 
@@ -160,9 +159,4 @@ public class Shipping {
 			.status("SUCCESS")
 			.build();
 	}
-
-	// public void addShippingHistory(ShippingHistory shippingHistory) {
-	// 	shippingHistory.setShipping(this); // 양방향 관계 설정
-	// 	this.historyList.add(shippingHistory);
-	// }
 }

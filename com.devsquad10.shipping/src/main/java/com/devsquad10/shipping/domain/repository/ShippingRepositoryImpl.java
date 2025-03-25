@@ -1,5 +1,7 @@
 package com.devsquad10.shipping.domain.repository;
 
+import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -48,5 +50,10 @@ public class ShippingRepositoryImpl implements ShippingRepository{
 	@Override
 	public Optional<Shipping> findByOrderIdAndDeletedAtIsNull(UUID orderId) {
 		return jpaShippingRepository.findByOrderIdAndDeletedAtIsNull(orderId);
+	}
+
+	@Override
+	public List<Shipping> findShippingWithDeadlineToday() {
+		return jpaShippingRepository.findShippingWithDeadlineToday();
 	}
 }

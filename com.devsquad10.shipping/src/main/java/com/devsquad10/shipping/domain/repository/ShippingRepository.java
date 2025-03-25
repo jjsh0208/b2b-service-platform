@@ -1,5 +1,7 @@
 package com.devsquad10.shipping.domain.repository;
 
+import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -28,4 +30,10 @@ public interface ShippingRepository {
 
 	// 주문Id로 배송 조회
 	Optional<Shipping> findByOrderIdAndDeletedAtIsNull(UUID orderId);
+
+	// 납품기한이 오늘 날짜인 배송 전체 조회
+	@Query("SELECT s FROM Shipping s WHERE s.deletedAt is NULL "
+		+ "AND s.companyShippingManagerId is Not Null "
+		+ "AND FUNCTION('DATE', s.deadLine) = CURRENT_DATE")
+	List<Shipping> findShippingWithDeadlineToday();
 }
