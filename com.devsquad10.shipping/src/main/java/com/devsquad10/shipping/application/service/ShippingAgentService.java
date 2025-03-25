@@ -38,18 +38,17 @@ public class ShippingAgentService {
 	private final HubClient hubClient;
 	private final ShippingAgentRepository shippingAgentRepository;
 
-	// 권한 확인 - MASTER, 담당 HUB
+	// 권한 - MASTER, 담당 HUB
 	@Caching(
 		evict = {@CacheEvict(value = "shippingAgentSearchCache", allEntries = true)}
 	)
 	public boolean createShippingAgent(ShippingAgentFeignClientPostRequest request) {
-
-		//TODO: User 정보 feign client 로 호출되어 생성됨
+		// User 정보 feign client 로 호출되어 생성됨
 		UUID reqShippingManagerId = request.getShippingManagerId(); // 배송담당자 ID
 		String reqSlackId = request.getSlackId();
 
 		// 담당자 타입 존재 유효성 검사
-		// TODO: COM_DVL 경우, 소속 허브 ID 유효성 검사 필요
+		// COM_DVL 경우, 소속 허브 ID 유효성 검사 필요
 		ShippingAgentType reqType = request.getType();
 		if(reqType != ShippingAgentType.HUB_DVL && reqType != ShippingAgentType.COM_DVL) {
 			log.error(reqType + " Shipping Agent type is not supported");
@@ -84,7 +83,7 @@ public class ShippingAgentService {
 		return true;
 	}
 
-	// TODO: 권한 확인 - MASTER, 담당 HUB, 담당 DLV_AGENT
+	// 권한 - MASTER, 담당 HUB, 담당 DLV_AGENT
 	@Transactional(readOnly = true)
 	@Cacheable(value = "shippingAgentCache", key = "#shippingManagerId.toString()")
 	public ShippingAgentResDto getShippingAgentById(UUID shippingManagerId) {
@@ -95,7 +94,7 @@ public class ShippingAgentService {
 		return ShippingAgentResDto.toResponse(targetshippingAgent);
 	}
 
-	// TODO: 권한 확인 - MASTER, 담당 HUB, 담당 DLV_AGENT
+	// 권한 - MASTER, 담당 HUB, 담당 DLV_AGENT
 	@Transactional(readOnly = true)
 	@Cacheable(value = "shippingAgentSearchCache",
 		key = "{#request.shippingManagerId, #request.hubId, #request.page, #request.size, #request.sortOption?.name(), #request.sortOrder?.name()}"
@@ -109,7 +108,7 @@ public class ShippingAgentService {
 		return PagedShippingAgentResDto.toResponseDto(shippingAgentItemDtoPage, request.getSortOption());
 	}
 
-	// TODO: 권한 확인 - MASTER, 담당HUB
+	// 권한 - MASTER, 담당HUB
 	// 1. 유저의 feign client 호출되어 넘겨받은 정보 변경
 	@Caching(
 		evict = {@CacheEvict(value = "shippingAgentSearchCache", allEntries = true)}
@@ -142,13 +141,13 @@ public class ShippingAgentService {
 		return true;
 	}
 
-	// TODO: 권한 확인 - MASTER, 담당HUB
+	// 권한 - MASTER, 담당HUB
 	// 2.배송 여부 확인 변경
 	@Caching(
 		put = {@CachePut(value = "shippingAgentCache", key = "#result.shippingManagerId.toString()")},
 		evict = {@CacheEvict(value = "shippingAgentSearchCache", allEntries = true)
 	})
-	public ShippingAgentResDto transitUpdateShippingAgent(UUID shippingManagerId, Boolean isTransit) {
+	public ShippingAgentResDto transitUpdateShippingAgent(UUID shippingManagerId, Boolean isTransit, String userId) {
 		log.info("isTransit: {}", isTransit);
 		ShippingAgent target = shippingAgentRepository.findByShippingManagerIdAndDeletedAtIsNull(shippingManagerId)
 			.orElseThrow(() -> new ShippingAgentNotFoundException(shippingManagerId + ": 배송 관리자 ID가 존재하지 않습니다."));
@@ -159,12 +158,13 @@ public class ShippingAgentService {
 		target.preUpdate();
 		return shippingAgentRepository.save(target.toBuilder()
 				.isTransit(isTransit)
+				.createdBy(userId)
 				.build())
 			.toResponse();
 	}
 
-	// TODO: 권한 확인 - MASTER, 담당HUB
-	// 배송담당자ID로 배송담당자 단일 조회 - User feign client 호출 요청 삭제
+	// 권한 - MASTER, 담당HUB
+	// 배송담당자 ID로 배송담당자 단일 조회 - User feign client 호출 요청 삭제
 	@Caching(evict = {
 		@CacheEvict(value = "shippingAgentCache", allEntries = true),
 		@CacheEvict(value = "shippingAgentSearchCache", allEntries = true)
@@ -180,7 +180,4 @@ public class ShippingAgentService {
 		shippingAgentRepository.save(target.softDelete());
 		return true;
 	}
-
-	// TODO: 담당자 배정 로직 구현은 새로운 서비스 생성하고
-	//  더미데이터 180명 query 만들어서 구현!
 }

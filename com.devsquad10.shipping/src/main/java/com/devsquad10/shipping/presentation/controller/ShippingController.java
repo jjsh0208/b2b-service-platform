@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -32,30 +33,35 @@ public class ShippingController {
 
 	private final ShippingService shippingService;
 
-	// TODO: 권한 확인 - MASTER, 담당 HUB, DVL_AGENT
+	// 권한 - MASTER, 담당 HUB, DVL_AGENT
 	// 배송 상태(HUB_WAIT -> HUB_TRNS -> HUB_ARV -> COM_TRNS -> DLV_COMP)
 	@PatchMapping("/{id}")
 	public ResponseEntity<ShippingResponse<ShippingResDto>> statusUpdateShipping(
 		@PathVariable(name = "id") UUID id,
-		@RequestBody ShippingUpdateReqDto shippingUpdateReqDto) {
+		@RequestBody ShippingUpdateReqDto shippingUpdateReqDto,
+		@RequestHeader("X-User-Id") String userId
+		) {
 
 		return ResponseEntity.status(HttpStatus.OK)
 			.body(ShippingResponse.success(
 				HttpStatus.OK.value(),
-				shippingService.statusUpdateShipping(id, shippingUpdateReqDto))
+				shippingService.statusUpdateShipping(id, shippingUpdateReqDto, userId))
 			);
 	}
 
+	// TODO: 테스트 후, 삭제(함께 슬랙 메시지 발송)
 	// 슬랙 발송 API 테스트
 	@GetMapping("/slack/{orderId}")
-	public ResponseEntity<ShippingResponse<ShippingClientDataResponseDto>> sendSlackMessage(@PathVariable(name = "orderId") UUID orderId) {
+	public ResponseEntity<ShippingResponse<ShippingClientDataResponseDto>> sendSlackMessage(
+		@PathVariable(name = "orderId") UUID orderId
+	) {
 		return ResponseEntity.status(HttpStatus.OK)
 			.body(ShippingResponse.success(
 				HttpStatus.OK.value(),
 				shippingService.sendSlackMessage(orderId)));
 	}
 
-	// TODO: 권한 확인 - ALL + 담당 HUB, DVL_AGENT
+	// 권한 - ALL + 담당 HUB, DVL_AGENT
 	@GetMapping("/{id}")
 	public ResponseEntity<ShippingResponse<ShippingResDto>> getShippingById(
 		@PathVariable(name = "id") UUID id) {
@@ -67,7 +73,7 @@ public class ShippingController {
 			);
 	}
 
-	// TODO: 권한 확인 - ALL + 담당 HUB, DVL_AGENT
+	// 권한 - ALL + 담당 HUB, DVL_AGENT
 	@GetMapping("/search")
 	public ResponseEntity<ShippingResponse<PagedShippingResDto>> searchShipping(
 		@ModelAttribute @Valid ShippingSearchReqDto request
@@ -81,7 +87,7 @@ public class ShippingController {
 			);
 	}
 
-	// TODO: 권한 확인 - MASTER, 담당 HUB
+	// 권한 - MASTER, 담당 HUB
 	@DeleteMapping("/order/{orderId}")
 	public boolean deleteShippingForOrder(
 		@PathVariable(name = "orderId") UUID orderId) {

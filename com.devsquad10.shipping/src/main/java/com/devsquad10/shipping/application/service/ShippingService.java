@@ -63,15 +63,14 @@ public class ShippingService {
 	private final OrderClient orderClient;
 	private final MessageClient messageClient;
 
-	// TODO: 권한 확인 - MASTER, 담당 HUB, DVL_AGENT
-	//TODO: GPS + Geolocation 적용하여 배송 위치 추적에 따른 배송 경로기록 상태 이벤트 처리
-	// 그 결과를 바로 배송 상태로 update 처리
+	// 권한 - MASTER, 담당 HUB, DVL_AGENT
+	// TODO: GPS + Geolocation 적용하여 배송 위치 추적에 따른 배송 경로기록 상태 이벤트 처리 예정
 	// 배송 상태(HUB_WAIT -> HUB_TRNS -> HUB_ARV -> COM_TRNS -> DLV_COMP)
 	@Caching(
 		put = {@CachePut(value = "shippingCache", key = "#id.toString", condition = "#id != null")},
 		evict = {@CacheEvict(cacheNames = "shippingSearchCache", allEntries = true)}
 	)
-	public ShippingResDto statusUpdateShipping(UUID id, ShippingUpdateReqDto shippingUpdateReqDto) {
+	public ShippingResDto statusUpdateShipping(UUID id, ShippingUpdateReqDto shippingUpdateReqDto, String userId) {
 		// 동시성 처리로 인해 비관적 락 적용하여 동시성 제어
 		Shipping shipping = shippingRepository.findByIdWithPessimisticLock(id)
 			.orElseThrow(() -> new ShippingNotFoundException("ID " + id + "에 해당하는 배송 데이터를 찾을 수 없습니다."));
@@ -128,6 +127,7 @@ public class ShippingService {
 		shipping.preUpdate();
 		return shippingRepository.save(shipping.toBuilder()
 			.status(shippingUpdateReqDto.getStatus())
+			.createdBy(userId)
 			.build()).toResponseDto();
 	}
 
@@ -153,9 +153,9 @@ public class ShippingService {
 			.build()).toResponseDto();
 	}
 
+	// TODO: 테스트 후, 삭제(함께 슬랙 메시지 발송)
 	// 슬랙 발송 API 테스트
 	public ShippingClientDataResponseDto sendSlackMessage(UUID orderId) {
-		// TODO: 테스트 후, 삭제(함께 슬랙 메시지 발송)
 		log.info("서비스 시작");
 		ShippingClientDataResponseDto responseDto = sendSlackNotification(orderId);
 		log.info("서비스 끝 OrderId: {}", responseDto.getRecipientId());
@@ -172,7 +172,7 @@ public class ShippingService {
 		return response;
 	}
 
-	// TODO: 권한 확인 - ALL + 담당 HUB, DVL_AGENT
+	// 권한 - ALL + 담당 HUB, DVL_AGENT
 	@Transactional(readOnly = true)
 	@Cacheable(value = "shippingCache", key = "#id.toString()", condition = "#id != null")
 	public ShippingResDto getShippingById(UUID id) {
@@ -181,7 +181,7 @@ public class ShippingService {
 			.toResponseDto();
 	}
 
-	// TODO: 권한 확인 - ALL + 담당 HUB, DVL_AGENT
+	// 권한 - ALL + 담당 HUB, DVL_AGENT
 	@Transactional(readOnly = true)
 	@Cacheable(value = "shippingSearchCache",
 		key = "{#request.id, #request.status != null ? #request.status.name() : 'null', #request.departureHubId, #request.destinationHubId, #request.companyShippingManagerId, "
@@ -196,7 +196,7 @@ public class ShippingService {
 		return PagedShippingResDto.toResponseDto(shippingItemResDtoPage, request.getSortOption());
 	}
 
-	// TODO: 권한 확인 - MASTER, 담당 HUB
+	// 권한 - MASTER, 담당 HUB
 	@Caching(
 		evict = {@CacheEvict(value = "shippingSearchCache", allEntries = true)}
 	)

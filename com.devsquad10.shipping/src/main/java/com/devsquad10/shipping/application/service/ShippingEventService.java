@@ -54,7 +54,6 @@ public class ShippingEventService {
 	private final CompanyClient companyClient;
 	private final UserClient userClient;
 
-	// TODO: 권한 확인 - MASTER
 	// 배송 & 배송 경로 기록 생성
 	public void handlerShippingCreateRequest(ShippingCreateMessage shippingCreateMessage) throws
 		JsonProcessingException {
@@ -80,7 +79,7 @@ public class ShippingEventService {
 				shippingCreateMessage.getRequestDetails() != null ? shippingCreateMessage.getRequestDetails() : "")
 			.recipientName(userInfo.getUsername())
 			.recipientSlackId(userInfo.getSlackId())
-			// TODO: shipping의 status가 HUB_ARV 될때 event 발생하여 업체 배송담당자 배정처리
+			// shipping status=HUB_ARV 될 때 업체 배송담당자 배정처리
 			.companyShippingManagerId(null)
 			.deadLine(shippingCreateMessage.getDeadLine())
 			.build();
@@ -203,7 +202,7 @@ public class ShippingEventService {
 				.shippingManagerId(selectedHubShippingAgentId)
 				.estDist(route.getDistance())
 				.estTime(route.getTime())
-				// TODO: 실제 거리 및 시간 계산은 현재 위치 기반으로 정보를 수집하여 update 처리
+				// TODO: 실제 거리 및 시간 계산은 현재 위치 기반으로 정보를 수집하여 구현 예정
 				.actDist(route.getDistance() + 2.23)
 				.actTime(route.getTime() + 2342365)
 				.historyStatus(ShippingHistoryStatus.HUB_WAIT)
