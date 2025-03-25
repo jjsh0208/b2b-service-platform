@@ -86,7 +86,7 @@
 
 ## 📅 프로젝트 진행 기간
 
-- 2025년 3월 11일 ~ 2025년 3월 26
+- 2025년 3월 11일 ~ 2025년 3월 26일
 
 ## 🏗 서비스 구성
 
@@ -194,12 +194,44 @@ b2b-project/                         # B2B 루트 프로젝트
 
 ## 🚨 Trouble Shooting
 
-트러블 슈팅 기재
+[승현] saga pattern 무한 재시도
+방지- [wiki 보기](https://github.com/DevSquad10/b2b-service-platform/wiki/%5BTrouble-Shooting%5D-%5B%EC%8A%B9%ED%98%84%5D-saga-pattern-%EB%AC%B4%ED%95%9C-%EC%9E%AC%EC%8B%9C%EB%8F%84-%EB%B0%A9%EC%A7%80)
+
+[승현] RabbitMQ concurrency 설정과 비관적 락을 활용한 재고 감소 동시성
+제어 - [wiki 보기](https://github.com/DevSquad10/b2b-service-platform/wiki)
+
+[승욱] SpringBoot server port 오류 - [wiki 보기](https://github.com/DevSquad10/b2b-service-platform/wiki)
 
 ## ⚙️ 적용 기술
 
-적용 기술 정리
+### *QueryDSL* ###
 
+> 검색, 정렬 등 동적 쿼리 작성을 위해 사용하며, 타입 안전한 SQL 쿼리를 생성기 위해 활용했습니다.
+
+### *Redis* ###
+
+> 연속된 요청으로 인한 DB 병목을 해소하기 위해 캐싱 용도로 사용하여 빠른 데이터 접근을 지원합니다.
+
+### *RabbitMQ 비동기 처리* ###
+
+> MSA 도메인 간 비동기 이벤트 처리를 통해 서비스 간 결합도를 감소시키고 안정성을 향상시켰습니다.
+
+### *Scheduler 사용* ###
+
+> 매일 오전 6시에 배송 담당자들에게 당일 배송 메시지 안내를 자동으로 보내기 위해 사용했습니다.
+
+### *비관적 락 구현* ###
+
+> 재고 감소 등 동시성 문제가 발생할 수 있는 중요한 트랜잭션에서 충돌을 방지하기 위해 사용했습니다.
+
+### *Feign Client* ###
+
+> MSA 환경에서 다른 서비스의 API를 호출할 때 간편하게 HTTP 통신을 처리하기 위해 사용했습니다.
+
+### *Gemini AI* ###
+
+> 슬랙 메시지 양식을 자동화하고, 배송 순서를 최적화하여 효율적인 물류 관리를 지원합니다.
+>
 <br>
 
 ## 🛠 기술 스택
