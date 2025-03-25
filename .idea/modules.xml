@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/com.devsquad10.common/b2b.com.devsquad10.common.main.iml" filepath="$PROJECT_DIR$/.idea/modules/com.devsquad10.common/b2b.com.devsquad10.common.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/com.devsquad10.company/b2b.com.devsquad10.company.main.iml" filepath="$PROJECT_DIR$/.idea/modules/com.devsquad10.company/b2b.com.devsquad10.company.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/com.devsquad10.gateway/b2b.com.devsquad10.gateway.main.iml" filepath="$PROJECT_DIR$/.idea/modules/com.devsquad10.gateway/b2b.com.devsquad10.gateway.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/com.devsquad10.hub/b2b.com.devsquad10.hub.main.iml" filepath="$PROJECT_DIR$/.idea/modules/com.devsquad10.hub/b2b.com.devsquad10.hub.main.iml" />
