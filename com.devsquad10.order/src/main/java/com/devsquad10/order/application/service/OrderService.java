@@ -42,7 +42,7 @@ public class OrderService {
 	private final ShippingClient shippingClient;
 
 	@CachePut(cacheNames = "orderCache", key = "#result.id")
-	public OrderResDto createOrder(OrderReqDto orderReqDto, String userId) {
+	public OrderResDto createOrder(OrderReqDto orderReqDto, UUID userId) {
 		Order order = Order.builder()
 			.recipientsId(orderReqDto.getRecipientsId())
 			.productId(orderReqDto.getProductId())
@@ -85,7 +85,7 @@ public class OrderService {
 	@Caching(evict = {
 		@CacheEvict(cacheNames = "orderSearchCache", allEntries = true)
 	})
-	public OrderResDto updateOrder(UUID id, OrderUpdateReqDto orderUpdateReqDto, String userId) {
+	public OrderResDto updateOrder(UUID id, OrderUpdateReqDto orderUpdateReqDto, UUID userId) {
 
 		Order order = orderRepository.findByIdAndDeletedAtIsNull(id)
 			.orElseThrow(() -> new OrderNotFoundException("Order Not Found By Id : " + id));
@@ -163,7 +163,7 @@ public class OrderService {
 		@CacheEvict(cacheNames = "orderCache", key = "#id"),
 		@CacheEvict(cacheNames = "orderSearchCache", key = "#id")
 	})
-	public void deleteOrder(UUID id, String userId) {
+	public void deleteOrder(UUID id, UUID userId) {
 		Order order = orderRepository.findByIdAndDeletedAtIsNull(id)
 			.orElseThrow(() -> new OrderNotFoundException("Order Not Found By Id : " + id));
 

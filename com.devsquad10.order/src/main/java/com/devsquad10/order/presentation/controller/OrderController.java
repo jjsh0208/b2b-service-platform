@@ -34,7 +34,7 @@ public class OrderController {
 
 	@PostMapping
 	public ResponseEntity<OrderResponse<OrderResDto>> createOrder(@RequestBody OrderReqDto orderReqDto,
-		@RequestHeader("X-User-Id") String userId) {
+		@RequestHeader("X-User-Id") UUID userId) {
 
 		return ResponseEntity.status(HttpStatus.OK)
 			.body(OrderResponse.success(HttpStatus.OK.value(), orderService.createOrder(orderReqDto, userId)));
@@ -63,7 +63,7 @@ public class OrderController {
 
 	@PatchMapping("/{id}")
 	public ResponseEntity<OrderResponse<OrderResDto>> updateOrder(@PathVariable("id") UUID id,
-		@RequestBody OrderUpdateReqDto orderUpdateReqDto, @RequestHeader("X-User-Id") String userId) {
+		@RequestBody OrderUpdateReqDto orderUpdateReqDto, @RequestHeader("X-User-Id") UUID userId) {
 		return ResponseEntity.status(HttpStatus.OK)
 			.body(
 				OrderResponse.success(HttpStatus.OK.value(), orderService.updateOrder(id, orderUpdateReqDto, userId)));
@@ -71,7 +71,7 @@ public class OrderController {
 
 	@DeleteMapping("/{id}")
 	public ResponseEntity<OrderResponse<String>> deleteOrder(@PathVariable("id") UUID id,
-		@RequestHeader("X-User-Id") String userId) {
+		@RequestHeader("X-User-Id") UUID userId) {
 		orderService.deleteOrder(id, userId);
 		return ResponseEntity.status(HttpStatus.OK)
 			.body(OrderResponse.success(HttpStatus.OK.value(), "Order Deleted successfully"));
