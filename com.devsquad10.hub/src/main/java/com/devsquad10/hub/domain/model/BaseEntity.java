@@ -21,7 +21,7 @@ import lombok.Getter;
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
 @SQLRestriction("deleted_at IS NULL")
-public class Base {
+public abstract class BaseEntity {
 
 	@CreatedDate
 	@Column(name = "created_at", nullable = false, updatable = false)
