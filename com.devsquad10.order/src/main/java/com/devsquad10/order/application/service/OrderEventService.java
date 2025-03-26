@@ -18,9 +18,11 @@ import com.devsquad10.order.domain.repository.OrderRepository;
 import com.devsquad10.order.infrastructure.client.CompanyClient;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class OrderEventService {
 
 	private final OrderRepository orderRepository;
@@ -37,6 +39,9 @@ public class OrderEventService {
 	 * @param stockDecrementMessage 재고 차감 메시지
 	 */
 	public void handlerShippingRequest(StockDecrementMessage stockDecrementMessage) {
+		log.info("[재고 차감 처리] 주문 ID = {}, 상품 ID = {}",
+			stockDecrementMessage.getOrderId(), stockDecrementMessage.getProductId());
+
 		Order targetOrder = findOrderById(stockDecrementMessage.getOrderId());
 		Optional<String> recipientsAddress = findRecipientAddress(targetOrder.getRecipientsId());
 
@@ -51,7 +56,12 @@ public class OrderEventService {
 	 */
 	public void updateOrderStatus(StockDecrementMessage stockDecrementMessage) {
 		Order targetOrder = findOrderById(stockDecrementMessage.getOrderId());
-		updateOrderStatus(targetOrder, OrderStatus.fromString(stockDecrementMessage.getStatus()));
+		OrderStatus newStatus = OrderStatus.fromString(stockDecrementMessage.getStatus());
+
+		log.info("[주문 상태 변경] 주문 ID = {}, 기존 상태 = {}, 새로운 상태 = {}",
+			targetOrder.getId(), targetOrder.getStatus(), newStatus);
+
+		updateOrderStatus(targetOrder, newStatus);
 	}
 
 	/**
@@ -61,6 +71,10 @@ public class OrderEventService {
 	 */
 	public void updateOrderStatusToWaitingForShipment(ShippingResponseMessage shippingResponseMessage) {
 		Order targetOrder = findOrderById(shippingResponseMessage.getOrderId());
+
+		log.info("[배송 생성 성공] 주문 ID = {}, 배송 ID = {} -> 상태 변경: WAITING_FOR_SHIPMENT",
+			shippingResponseMessage.getOrderId(), shippingResponseMessage.getShippingId());
+
 		targetOrder = targetOrder.toBuilder()
 			.shippingId(shippingResponseMessage.getShippingId())
 			.build();
@@ -81,8 +95,11 @@ public class OrderEventService {
 		String retryCountStr = redisTemplate.opsForValue().get(retryCountKey);
 		int retryCount = (retryCountStr != null) ? Integer.parseInt(retryCountStr) : 0;
 
+		log.warn("[배송 재시도] 주문 ID = {}, 현재 재시도 횟수 = {}", orderId, retryCount);
+
 		// 3회 이상 재시도한 경우 상태를 'ORDER_RECEIVED'로 변경하고 종료
 		if (retryCount >= 3) {
+			log.error("[배송 실패] 주문 ID = {}, 재시도 횟수 초과 -> 상태: ORDER_FAILED", orderId);
 			updateOrderStatus(findOrderById(shippingResponseMessage.getOrderId()), OrderStatus.ORDER_FAILED);
 			return;
 		}
@@ -121,7 +138,12 @@ public class OrderEventService {
 	 * @return 수령인의 주소 (Optional)
 	 */
 	private Optional<String> findRecipientAddress(UUID recipientsId) {
-		return Optional.ofNullable(companyClient.findRecipientAddressByCompanyId(recipientsId));
+		Optional<String> address = Optional.ofNullable(companyClient.findRecipientAddressByCompanyId(recipientsId));
+
+		log.info("[수령 주소 조회] 수령인 ID = {}, 조회 결과 = {}",
+			recipientsId, address.isPresent() ? "성공" : "실패");
+
+		return address;
 	}
 
 	/**
@@ -136,12 +158,19 @@ public class OrderEventService {
 		Optional<String> recipientsAddress) {
 		recipientsAddress.ifPresentOrElse(
 			address -> {
+				log.info("[배송 요청 처리] 주문 ID = {}, 배송지 = {}", targetOrder.getId(), address);
+
 				updateOrderStatus(targetOrder, stockDecrementMessage, OrderStatus.PREPARING_SHIPMENT);
 				ShippingCreateRequest shippingCreateRequest = createShippingRequest(targetOrder, stockDecrementMessage,
 					address);
+
+				log.info("[배송 생성 요청] 주문 ID = {}, 공급업체 ID = {}", targetOrder.getId(),
+					stockDecrementMessage.getSupplierId());
 				orderMessageService.sendShippingCreateMessage(shippingCreateRequest);
 			},
 			() -> {
+				log.warn("[배송 요청 실패] 주문 ID = {}, 사유: 유효한 배송지 없음", targetOrder.getId());
+
 				updateOrderStatus(targetOrder, stockDecrementMessage, OrderStatus.INVALID_RECIPIENT);
 				orderMessageService.sendStockReversalMessage(
 					new StockReversalMessage(targetOrder.getProductId(), targetOrder.getQuantity()));
@@ -156,6 +185,7 @@ public class OrderEventService {
 	 * @param newStatus 새로운 주문 상태
 	 */
 	private void updateOrderStatus(Order targetOrder, OrderStatus newStatus) {
+		log.info("[주문 상태 업데이트] 주문 ID = {}, 변경 상태 = {}", targetOrder.getId(), newStatus);
 		orderRepository.save(targetOrder.toBuilder().status(newStatus).build());
 	}
 
@@ -168,6 +198,10 @@ public class OrderEventService {
 	 */
 	private void updateOrderStatus(Order targetOrder, StockDecrementMessage stockDecrementMessage,
 		OrderStatus newStatus) {
+		log.info("[주문 상태 업데이트] 주문 ID = {}, 상품명 = {}, 공급업체 ID = {}, 변경 상태 = {}",
+			targetOrder.getId(), stockDecrementMessage.getProductName(),
+			stockDecrementMessage.getSupplierId(), newStatus);
+
 		orderRepository.save(targetOrder.toBuilder()
 			.supplierId(stockDecrementMessage.getSupplierId())
 			.productName(stockDecrementMessage.getProductName())
@@ -185,6 +219,8 @@ public class OrderEventService {
 	 * @return 생성된 배송 요청 메시지
 	 */
 	private ShippingCreateRequest createShippingRequest(Order order, StockDecrementMessage message, String address) {
+
+		log.info("[배송 요청 생성] 주문 ID = {}, 배송 주소 = {}", order.getId(), address);
 		return new ShippingCreateRequest(
 			order.getId(),
 			message.getSupplierId(),

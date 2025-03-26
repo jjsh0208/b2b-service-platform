@@ -29,9 +29,11 @@ import com.devsquad10.order.infrastructure.client.CompanyClient;
 import com.devsquad10.order.infrastructure.client.ShippingClient;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 @Transactional
 public class OrderService {
 
@@ -56,6 +58,8 @@ public class OrderService {
 		// DB에 저장
 		orderRepository.save(order);
 
+		log.info("재고 감소 이벤트 요청: 주문 ID = {}, 제품 ID = {}, 수량 = {}",
+			order.getId(), order.getProductId(), order.getQuantity());
 		orderMessageService.sendStockDecrementMessage(order.toStockDecrementMessage());
 
 		return order.toResponseDto();
@@ -101,6 +105,9 @@ public class OrderService {
 					"Invalid recipient address for recipientsId : " + orderUpdateReqDto.getRecipientsId());
 			}
 
+			log.info("배송지 변경 감지: 기존 recipientsId={}, 새로운 recipientsId={}",
+				order.getRecipientsId(), orderUpdateReqDto.getRecipientsId());
+
 			order = order.toBuilder()
 				.recipientsId(orderUpdateReqDto.getRecipientsId())
 				.build();
@@ -119,6 +126,9 @@ public class OrderService {
 					.productId(order.getProductId())
 					.quantity(quantityToDecrease) // 감소할 수량
 					.build();
+				log.info("재고 감소 이벤트 요청: 주문 ID={}, 제품 ID={}, 감소 수량={}",
+					order.getId(), order.getProductId(), quantityToDecrease);
+
 				orderMessageService.sendStockDecrementMessage(stockDecrementMessage);// 재고 감소 메시지 전송
 			}
 			// 수량이 감소하면 재고 회복 요청
@@ -126,6 +136,10 @@ public class OrderService {
 				int quantityToRecover = originalQuantity - updatedQuantity;
 				StockReversalMessage stockReversalMessage = new StockReversalMessage(order.getProductId(),
 					quantityToRecover);
+
+				log.info("재고 회복 이벤트 요청: 주문 ID={}, 제품 ID={}, 회복 수량={}",
+					order.getId(), order.getProductId(), quantityToRecover);
+
 				orderMessageService.sendStockReversalMessage(stockReversalMessage);
 			}
 
@@ -150,10 +164,15 @@ public class OrderService {
 			.deadLine(orderUpdateReqDto.getDeadLine())
 			.build();
 
+		log.info("배송 업데이트 이벤트 요청: 주문 ID={}, recipientsId={}, 새로운 주소={}",
+			order.getId(), order.getRecipientsId(), newRecipientsAddress);
+
 		orderMessageService.sendShippingUpdateMessage(shippingUpdateRequest);
 
 		// 5. 업데이트된 주문 정보 저장
 		orderRepository.save(order);
+
+		log.info("주문 정보 업데이트 완료: 주문 ID={}", order.getId());
 
 		// 6. 업데이트된 주문 정보 반환
 		return order.toResponseDto();
@@ -167,16 +186,24 @@ public class OrderService {
 		Order order = orderRepository.findByIdAndDeletedAtIsNull(id)
 			.orElseThrow(() -> new OrderNotFoundException("Order Not Found By Id : " + id));
 
+		log.info("주문 삭제 요청: 주문 ID={}, 사용자 ID={}", id, userId);
+
 		StockReversalMessage stockReversalMessage = new StockReversalMessage(order.getProductId(),
 			order.getQuantity());
 
+		log.info("재고 회복 이벤트 요청: 주문 ID={}, 제품 ID={}, 회복 수량={}",
+			order.getId(), order.getProductId(), order.getQuantity());
 		orderMessageService.sendStockReversalMessage(stockReversalMessage);
+
+		log.info("배송 정보 삭제 요청: 주문 ID={}", id);
 		shippingClient.deleteShippingForOrder(id);
 
 		orderRepository.save(order.toBuilder()
 			.deletedAt(LocalDateTime.now())
 			.deletedBy(userId)
 			.build());
+
+		log.info("주문 삭제 완료: 주문 ID={}, 삭제한 사용자 ID={}", id, userId);
 	}
 
 	public void updateOrderStatusToShipped(UUID shippingId) {
