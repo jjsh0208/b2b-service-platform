@@ -68,7 +68,7 @@ public class Product {
 
 	// 레코드 생성자
 	@Column(updatable = false, nullable = false)
-	private String createdBy;
+	private UUID createdBy;
 
 	// 레코드 수정 일시
 	@LastModifiedDate
@@ -78,7 +78,7 @@ public class Product {
 
 	// 레코드 수정자
 	@Column
-	private String updatedBy;
+	private UUID updatedBy;
 
 	// 레코드 삭제 일시
 	@Column
@@ -86,7 +86,7 @@ public class Product {
 
 	// 레코드 삭제 사용자
 	@Column
-	private String deletedBy;
+	private UUID deletedBy;
 
 	@PrePersist
 	protected void onCreate() {
