@@ -55,7 +55,7 @@ public class ProductServiceIntegrationTest {
 			.supplierId(testProductId)
 			.hubId(testHubId)
 			.status(ProductStatus.AVAILABLE)
-			.createdBy("testUser")
+			.createdBy(UUID.randomUUID())
 			.build();
 
 		productRepository.save(testProduct);
@@ -68,7 +68,7 @@ public class ProductServiceIntegrationTest {
 	void testCreateProductSuccess() {
 
 		// Given
-		String userId = "testUser";
+		UUID userId = UUID.randomUUID();
 
 		ProductReqDto productReqDto = new ProductReqDto("newProduct", "newProduct good", 1000, 500, testSupplierId);
 
@@ -84,7 +84,7 @@ public class ProductServiceIntegrationTest {
 	void testCreateProductFailEntityNotFoundException() {
 
 		// Given
-		String userId = "testUser";
+		UUID userId = UUID.randomUUID();
 		UUID FailSupplierId = UUID.randomUUID();
 
 		ProductReqDto productReqDto = new ProductReqDto("newProduct", "newProduct good", 1000, 500, FailSupplierId);
@@ -139,7 +139,7 @@ public class ProductServiceIntegrationTest {
 				.quantity(1000)
 				.price(100)
 				.status(ProductStatus.AVAILABLE)
-				.createdBy("user" + i)
+				.createdBy(UUID.randomUUID())
 				.build();
 			productRepository.save(testProduct);
 		}
@@ -173,7 +173,7 @@ public class ProductServiceIntegrationTest {
 	@DisplayName("Product 업데이트 - Success")
 	void testUpdateProductSuccess() {
 		// Given
-		String userId = "testUser";
+		UUID userId = UUID.randomUUID();
 
 		ProductReqDto productReqDto = new ProductReqDto("updateProduct", "updateProduct good", 1000, 500,
 			testSupplierId);
@@ -192,7 +192,7 @@ public class ProductServiceIntegrationTest {
 	@DisplayName("Product 업데이트 - Fail - ProductFotFound")
 	void testUpdateProductFailProductNotFound() {
 		// Given
-		String userId = "testUser";
+		UUID userId = UUID.randomUUID();
 		UUID failProductId = UUID.randomUUID();
 
 		ProductReqDto productReqDto = new ProductReqDto("updateProduct", "updateProduct good", 1000, 500,
@@ -211,7 +211,7 @@ public class ProductServiceIntegrationTest {
 	@DisplayName("Product 업데이트 - Fail - EntityNotFoundException")
 	void testUpdateProductFailEntityNotFoundException() {
 		// Given
-		String userId = "testUser";
+		UUID userId = UUID.randomUUID();
 		UUID failSupplierId = UUID.randomUUID();
 
 		ProductReqDto productReqDto = new ProductReqDto("updateProduct", "updateProduct good", 1000, 500,
@@ -230,7 +230,7 @@ public class ProductServiceIntegrationTest {
 	@DisplayName("Product 삭제 - Success")
 	void testDeleteProductSuccess() {
 		// Given
-		String userId = "testUser";
+		UUID userId = UUID.randomUUID();
 
 		// When
 		productService.deleteProduct(testProductId, userId);
@@ -244,7 +244,7 @@ public class ProductServiceIntegrationTest {
 	@DisplayName("Product 삭제 - Fail - ProductNotFound")
 	void testDeleteProductFailProductNotFound() {
 		// Given
-		String userId = "testUser";
+		UUID userId = UUID.randomUUID();
 		UUID failProductId = UUID.randomUUID();
 		// When
 

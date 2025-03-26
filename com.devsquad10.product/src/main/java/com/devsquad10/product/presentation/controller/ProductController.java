@@ -32,7 +32,7 @@ public class ProductController {
 
 	@PostMapping
 	public ResponseEntity<ProductResponse<ProductResDto>> createProduct(@RequestBody ProductReqDto productReqDto,
-		@RequestHeader("X-User-Id") String userId) {
+		@RequestHeader("X-User-Id") UUID userId) {
 
 		return ResponseEntity.status(HttpStatus.OK)
 			.body(ProductResponse.success(HttpStatus.OK.value(), productService.createProduct(productReqDto, userId)));
@@ -62,7 +62,7 @@ public class ProductController {
 
 	@PatchMapping("/{id}")
 	public ResponseEntity<ProductResponse<ProductResDto>> updateProduct(@PathVariable("id") UUID id,
-		@RequestBody ProductReqDto productReqDto, @RequestHeader("X-User-Id") String userId) {
+		@RequestBody ProductReqDto productReqDto, @RequestHeader("X-User-Id") UUID userId) {
 		return ResponseEntity.status(HttpStatus.OK)
 			.body(ProductResponse.success(HttpStatus.OK.value(),
 				productService.updateProduct(id, productReqDto, userId)));
@@ -70,7 +70,7 @@ public class ProductController {
 
 	@DeleteMapping("/{id}")
 	public ResponseEntity<ProductResponse<String>> deleteProduct(@PathVariable("id") UUID id,
-		@RequestHeader("X-User-Id") String userId) {
+		@RequestHeader("X-User-Id") UUID userId) {
 		productService.deleteProduct(id, userId);
 		return ResponseEntity.status(HttpStatus.OK)
 			.body(ProductResponse.success(HttpStatus.OK.value(), "Product Deleted successfully"));
