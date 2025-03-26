@@ -22,7 +22,6 @@ import com.devsquad10.hub.application.dto.res.HubCreateResponseDto;
 import com.devsquad10.hub.application.dto.res.HubGetOneResponseDto;
 import com.devsquad10.hub.application.dto.res.HubUpdateResponseDto;
 import com.devsquad10.hub.application.dto.res.PagedHubResponseDto;
-import com.devsquad10.hub.application.service.HubRouteService;
 import com.devsquad10.hub.application.service.HubService;
 
 import jakarta.validation.Valid;

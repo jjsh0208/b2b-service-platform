@@ -47,7 +47,6 @@ public class HubRouteSearchRequestDto {
 	@Builder.Default
 	private Integer page = 0;
 
-	// TODO: Sort Option 관련 예외 처리
 	@Builder.Default
 	private HubRouteSortOption sortOption = HubRouteSortOption.CREATED_AT;
 
