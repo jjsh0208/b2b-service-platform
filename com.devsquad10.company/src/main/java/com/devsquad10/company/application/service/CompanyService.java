@@ -35,9 +35,8 @@ public class CompanyService {
 	private final HubClient hubClient;
 
 	@CachePut(cacheNames = "companyCache", key = "#result.id")
-	public CompanyResDto createCompany(CompanyReqDto companyReqDto, String userId) {
+	public CompanyResDto createCompany(CompanyReqDto companyReqDto, UUID userId) {
 
-		UUID venderId = UUID.fromString(userId);
 		UUID hubId = companyReqDto.getHubId();
 
 		//1. 허브 존재 유무 확인
@@ -48,7 +47,7 @@ public class CompanyService {
 		// 담당자 id는 유저 완성 시 등록
 		return companyRepository.save(Company.builder()
 			.name(companyReqDto.getName())
-			.venderId(venderId)
+			.venderId(userId)
 			.hubId(hubId)
 			.address(companyReqDto.getAddress())
 			.type(companyReqDto.getType())
@@ -81,7 +80,7 @@ public class CompanyService {
 	@Caching(evict = {
 		@CacheEvict(cacheNames = "companySearchCache", allEntries = true)
 	})
-	public CompanyResDto updateCompany(UUID id, CompanyReqDto companyReqDto, String userId) {
+	public CompanyResDto updateCompany(UUID id, CompanyReqDto companyReqDto, UUID userId) {
 		Company targetCompany = companyRepository.findByIdAndDeletedAtIsNull(id)
 			.orElseThrow(() -> new CompanyNotFoundException("Company Not Found By  Id : " + id));
 
@@ -106,7 +105,7 @@ public class CompanyService {
 		@CacheEvict(cacheNames = "companyCache", key = "#id"),
 		@CacheEvict(cacheNames = "companySearchCache", key = "#id")
 	})
-	public void deleteCompany(UUID id, String userId) {
+	public void deleteCompany(UUID id, UUID userId) {
 		Company targetCompany = companyRepository.findByIdAndDeletedAtIsNull(id)
 			.orElseThrow(() -> new CompanyNotFoundException("Company Not Found By  Id : " + id));
 

@@ -58,7 +58,7 @@ public class CompanyServiceIntegrationTest {
 			.hubId(testSupplierCompanyHubId)
 			.address("testSupplierCompanyAddress")
 			.type(CompanyTypes.SUPPLIER)
-			.createdBy("userId")
+			.createdBy(UUID.randomUUID())
 			.build();
 
 		testRecipientsCompanyVnederId = UUID.randomUUID();
@@ -70,7 +70,7 @@ public class CompanyServiceIntegrationTest {
 			.hubId(testRecipientsCompanyHubId)
 			.address("testRecipientsCompanyAddress")
 			.type(CompanyTypes.RECIPIENTS)
-			.createdBy("userId")
+			.createdBy(UUID.randomUUID())
 			.build();
 
 		companyRepository.save(testSupplierCompany);
@@ -89,10 +89,8 @@ public class CompanyServiceIntegrationTest {
 			UUID.fromString("11111111-1111-1111-1111-111111111101"),
 			"newSupplierAddress", CompanyTypes.SUPPLIER);
 
-		String userId = testSupplierCompanyVnederId.toString();
-
 		// When: createCompany 메서드 호출
-		CompanyResDto createdCompany = companyService.createCompany(companyReqDto, userId);
+		CompanyResDto createdCompany = companyService.createCompany(companyReqDto, UUID.randomUUID());
 
 		assertNotNull(createdCompany);
 		assertEquals("newSupplierCompany", createdCompany.getName());
@@ -111,7 +109,7 @@ public class CompanyServiceIntegrationTest {
 
 		// When & Then
 		assertThrows(EntityNotFoundException.class, () -> {
-			companyService.createCompany(companyReqDto, userId);
+			companyService.createCompany(companyReqDto, UUID.randomUUID());
 		});
 	}
 
@@ -157,7 +155,7 @@ public class CompanyServiceIntegrationTest {
 			Company testCompany = Company.builder()
 				.name("Company" + i)
 				.address("category1")
-				.createdBy("user" + i)
+				.createdBy(UUID.randomUUID())
 				.build();
 			companyRepository.save(testCompany);
 		}
@@ -191,8 +189,6 @@ public class CompanyServiceIntegrationTest {
 	@DisplayName("company 업데이트 - Success")
 	void testUpdateCompanySuccess() {
 		// Given
-		String userId = "user";
-
 		CompanyReqDto companyReqDto = new CompanyReqDto(
 			"New Name",
 			UUID.randomUUID(),
@@ -202,7 +198,8 @@ public class CompanyServiceIntegrationTest {
 		);
 
 		// When
-		CompanyResDto updatedCompany = companyService.updateCompany(testSupplierCompanyId, companyReqDto, userId);
+		CompanyResDto updatedCompany = companyService.updateCompany(testSupplierCompanyId, companyReqDto,
+			UUID.randomUUID());
 
 		// Then
 		assertNotNull(updatedCompany);
@@ -216,7 +213,6 @@ public class CompanyServiceIntegrationTest {
 	@DisplayName("company 업데이트 - Fail - CompanyForFound")
 	void testUpdateCompanyFailCompanyNotFound() {
 		// Given
-		String userId = "user";
 		UUID failCompanyId = UUID.randomUUID();
 
 		CompanyReqDto companyReqDto = new CompanyReqDto(
@@ -229,7 +225,7 @@ public class CompanyServiceIntegrationTest {
 
 		// When & Then
 		CompanyNotFoundException exception = assertThrows(CompanyNotFoundException.class, () -> {
-			companyService.updateCompany(failCompanyId, companyReqDto, userId);
+			companyService.updateCompany(failCompanyId, companyReqDto, UUID.randomUUID());
 		});
 
 		assertEquals("Company Not Found By  Id : " + failCompanyId, exception.getMessage());
@@ -239,7 +235,6 @@ public class CompanyServiceIntegrationTest {
 	@DisplayName("company 업데이트 - Fail - HubForFound")
 	void testUpdateCompanyFailHubFotFound() {
 		// Given
-		String userId = "user";
 		UUID failHubId = UUID.randomUUID();
 
 		CompanyReqDto companyReqDto = new CompanyReqDto(
@@ -252,7 +247,7 @@ public class CompanyServiceIntegrationTest {
 
 		// When & Then
 		EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> {
-			companyService.updateCompany(testSupplierCompanyId, companyReqDto, userId);
+			companyService.updateCompany(testSupplierCompanyId, companyReqDto, UUID.randomUUID());
 		});
 
 		assertEquals("Hub Not Found By Id : " + failHubId, exception.getMessage());
@@ -261,11 +256,8 @@ public class CompanyServiceIntegrationTest {
 	@Test
 	@DisplayName("company 삭제 - Success")
 	void testDeleteCompanySuccess() {
-		// Given
-		String userId = "testUser";
-
 		// When
-		companyService.deleteCompany(testSupplierCompanyId, userId);
+		companyService.deleteCompany(testSupplierCompanyId, UUID.randomUUID());
 
 		// Then
 		Optional<Company> company = companyRepository.findByIdAndDeletedAtIsNull(testSupplierCompanyId);
@@ -276,12 +268,11 @@ public class CompanyServiceIntegrationTest {
 	@DisplayName("company 삭제 - Fail - CompanyFotFound")
 	void testDeleteCompanyFailCompanyFotFound() {
 		// Given
-		String userId = "testUser";
 		UUID failCompanyId = UUID.randomUUID();
 
 		// When & Then
 		CompanyNotFoundException exception = assertThrows(CompanyNotFoundException.class, () -> {
-			companyService.deleteCompany(failCompanyId, userId);
+			companyService.deleteCompany(failCompanyId, UUID.randomUUID());
 		});
 
 		assertEquals("Company Not Found By  Id : " + failCompanyId, exception.getMessage());
@@ -290,7 +281,6 @@ public class CompanyServiceIntegrationTest {
 	@Test
 	@DisplayName("company 공급업체 허브 id 반환 - Success")
 	void testFindSupplierHubIdByCompanyIdSuccess() {
-
 		// When & Then
 		UUID hubId = companyService.findSupplierHubIdByCompanyId(testSupplierCompanyId);
 
@@ -300,7 +290,6 @@ public class CompanyServiceIntegrationTest {
 	@Test
 	@DisplayName("company 공급업체 허브 id 반환 - Fail")
 	void testFindSupplierHubIdByCompanyIdFail() {
-
 		// When & Then
 		UUID hubId = companyService.findSupplierHubIdByCompanyId(testRecipientsCompanyHubId);
 
@@ -310,7 +299,6 @@ public class CompanyServiceIntegrationTest {
 	@Test
 	@DisplayName("company 수령업체 주소 반환 - Success")
 	void testFindRecipientAddressByCompanyIdSuccess() {
-
 		// When & Then
 		String address = companyService.findRecipientAddressByCompanyId(testRecipientsCompanyId);
 
@@ -320,7 +308,6 @@ public class CompanyServiceIntegrationTest {
 	@Test
 	@DisplayName("company 수령업체 주소 반환 - Fail")
 	void testFindRecipientAddressByCompanyIdFail() {
-
 		// When & Then
 		String address = companyService.findRecipientAddressByCompanyId(testSupplierCompanyId);
 
@@ -330,7 +317,6 @@ public class CompanyServiceIntegrationTest {
 	@Test
 	@DisplayName("company 수령업체 주소 반환 - Success")
 	void testFindShippingCompanyInfoSuccess() {
-
 		// When & Then
 		ShippingCompanyInfoDto shippingCompanyInfoDto = companyService.findShippingCompanyInfo(testRecipientsCompanyId);
 
@@ -341,7 +327,6 @@ public class CompanyServiceIntegrationTest {
 	@Test
 	@DisplayName("company 수령업체 주소 반환 - Fail")
 	void testFindShippingCompanyInfoFail() {
-
 		// When & Then
 		ShippingCompanyInfoDto shippingCompanyInfoDto = companyService.findShippingCompanyInfo(UUID.randomUUID());
 
