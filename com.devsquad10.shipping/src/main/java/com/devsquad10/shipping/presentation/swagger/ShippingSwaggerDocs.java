@@ -3,6 +3,7 @@ package com.devsquad10.shipping.presentation.swagger;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
@@ -50,7 +51,8 @@ public @interface ShippingSwaggerDocs {
 	@Retention(RetentionPolicy.RUNTIME)
 	@Operation(summary = "배송 상태 수정", description = "배송의 상태를 변경합니다.")
 	@Parameters({
-		@Parameter(name = "id", description = "배송 상태를 수정할 배송의 UUID", example = "ed9fb44f-734a-42b7-94e6-4adefe84475f")
+		@Parameter(name = "id", description = "배송 상태를 수정할 배송의 UUID", example = "ed9fb44f-734a-42b7-94e6-4adefe84475f"),
+		@Parameter(name = "X-User-Id", description = "사용자 ID", example = "f47ac10b-58cc-4372-a567-0e02b2c3d479", in = ParameterIn.HEADER)
 	})
 	@ApiResponses({
 		@ApiResponse(responseCode = "200", description = "배송 상태 수정 성공"),
