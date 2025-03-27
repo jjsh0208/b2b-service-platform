@@ -93,7 +93,7 @@ public class Shipping {
 
 	@CreatedBy
 	@Column(updatable = false, nullable = false)
-	private String createdBy;
+	private UUID createdBy;
 
 	@LastModifiedDate
 	@Temporal(TemporalType.TIMESTAMP)
@@ -102,33 +102,33 @@ public class Shipping {
 
 	@LastModifiedBy
 	@Column(updatable = true, insertable = false)
-	private String updatedBy;
+	private UUID updatedBy;
 
 	@Column
 	private LocalDateTime deletedAt;
 
 	@Column
-	private String deletedBy;
+	private UUID deletedBy;
 
 	// TODO: user 설정
 	@PrePersist
 	public void prePersist() {
 		this.createdAt = LocalDateTime.now();
-		this.createdBy = "defaultUser"; // (예: SecurityContext에서 사용자 정보)
+		this.createdBy = UUID.randomUUID(); // (예: SecurityContext에서 사용자 정보)
 	}
 
 	// TODO: user 설정
 	@PreUpdate
 	public void preUpdate() {
 		this.updatedAt = LocalDateTime.now();
-		this.updatedBy = "updateUser";
+		this.updatedBy = UUID.randomUUID();
 	}
 
 	// TODO: user 설정
 	// 소프트 삭제 처리
 	public Shipping softDelete() {
 		this.deletedAt = LocalDateTime.now();
-		this.deletedBy = "deleteUser";
+		this.deletedBy = UUID.randomUUID();
 		return this;
 	}
 

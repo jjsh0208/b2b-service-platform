@@ -85,7 +85,7 @@ public class ShippingHistory {
 
 	@CreatedBy
 	@Column(updatable = false, nullable = false)
-	private String createdBy;
+	private UUID createdBy;
 
 	@LastModifiedDate
 	@Temporal(TemporalType.TIMESTAMP)
@@ -94,30 +94,30 @@ public class ShippingHistory {
 
 	@LastModifiedBy
 	@Column(updatable = true, insertable = false)
-	private String updatedBy;
+	private UUID updatedBy;
 
 	@Column
 	private LocalDateTime deletedAt;
 
 	@Column
-	private String deletedBy;
+	private UUID deletedBy;
 
 	@PrePersist
 	public void prePersist() {
 		this.createdAt = LocalDateTime.now();
-		this.createdBy = "defaultUser";
+		this.createdBy = UUID.randomUUID();
 	}
 
 	@PreUpdate
 	public void preUpdate() {
 		this.updatedAt = LocalDateTime.now();
-		this.updatedBy = "updateUser";
+		this.updatedBy = UUID.randomUUID();
 	}
 
 	// TODO: 삭제유저 구현 예정
 	public ShippingHistory softDelete() {
 		this.deletedAt = LocalDateTime.now();
-		this.deletedBy = "deleteUser";
+		this.deletedBy = UUID.randomUUID();
 
 		return this;
 	}

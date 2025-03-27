@@ -147,7 +147,7 @@ public class ShippingAgentService {
 		put = {@CachePut(value = "shippingAgentCache", key = "#result.shippingManagerId.toString()")},
 		evict = {@CacheEvict(value = "shippingAgentSearchCache", allEntries = true)
 	})
-	public ShippingAgentResDto transitUpdateShippingAgent(UUID shippingManagerId, Boolean isTransit, String userId) {
+	public ShippingAgentResDto transitUpdateShippingAgent(UUID shippingManagerId, Boolean isTransit, UUID userId) {
 		log.info("isTransit: {}", isTransit);
 		ShippingAgent target = shippingAgentRepository.findByShippingManagerIdAndDeletedAtIsNull(shippingManagerId)
 			.orElseThrow(() -> new ShippingAgentNotFoundException(shippingManagerId + ": 배송 관리자 ID가 존재하지 않습니다."));
