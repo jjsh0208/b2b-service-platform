@@ -41,7 +41,7 @@ public class ShippingController {
 	public ResponseEntity<ShippingResponse<ShippingResDto>> statusUpdateShipping(
 		@PathVariable(name = "id") UUID id,
 		@RequestBody ShippingUpdateReqDto shippingUpdateReqDto,
-		@RequestHeader("X-User-Id") String userId
+		@RequestHeader("X-User-Id") UUID userId
 		) {
 
 		return ResponseEntity.status(HttpStatus.OK)

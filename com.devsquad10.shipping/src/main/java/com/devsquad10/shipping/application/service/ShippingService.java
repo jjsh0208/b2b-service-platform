@@ -70,7 +70,7 @@ public class ShippingService {
 		put = {@CachePut(value = "shippingCache", key = "#id.toString", condition = "#id != null")},
 		evict = {@CacheEvict(cacheNames = "shippingSearchCache", allEntries = true)}
 	)
-	public ShippingResDto statusUpdateShipping(UUID id, ShippingUpdateReqDto shippingUpdateReqDto, String userId) {
+	public ShippingResDto statusUpdateShipping(UUID id, ShippingUpdateReqDto shippingUpdateReqDto, UUID userId) {
 		// 동시성 처리로 인해 비관적 락 적용하여 동시성 제어
 		Shipping shipping = shippingRepository.findByIdWithPessimisticLock(id)
 			.orElseThrow(() -> new ShippingNotFoundException("ID " + id + "에 해당하는 배송 데이터를 찾을 수 없습니다."));
