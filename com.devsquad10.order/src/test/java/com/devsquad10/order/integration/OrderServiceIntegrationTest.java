@@ -59,7 +59,7 @@ public class OrderServiceIntegrationTest {
 			.shippingId(testShippingId)
 			.deadLine(new Date())
 			.status(OrderStatus.ORDER_RECEIVED)
-			.createdBy("testUser")
+			.createdBy(UUID.randomUUID())
 			.build();
 
 		orderRepository.save(testOrder);
@@ -71,7 +71,7 @@ public class OrderServiceIntegrationTest {
 	@DisplayName("Order 접수 - Success")
 	void testCreateOrderSuccess() {
 		// Given
-		String userId = "testUser";
+		UUID userId = UUID.randomUUID();
 		OrderReqDto orderReqDto = new OrderReqDto(testRecipientsId, testProductId, 5, "부재 시 문앞", new Date());
 
 		OrderResDto result = orderService.createOrder(orderReqDto, userId);
@@ -131,7 +131,7 @@ public class OrderServiceIntegrationTest {
 				.requestDetails("Order Details" + i)
 				.deadLine(new Date())
 				.status(OrderStatus.ORDER_RECEIVED)
-				.createdBy("testUser" + i)
+				.createdBy(UUID.randomUUID())
 				.build();
 
 			orderRepository.save(testProduct);
@@ -166,7 +166,7 @@ public class OrderServiceIntegrationTest {
 	@DisplayName("Order 업데이트 - Success")
 	void testUpdateOrderSuccess() {
 		// Given
-		String userId = "testUser";
+		UUID userId = UUID.randomUUID();
 
 		OrderUpdateReqDto orderUpdateReqDto = new OrderUpdateReqDto(testRecipientsId, 100, "update Test",
 			new Date());
@@ -185,7 +185,7 @@ public class OrderServiceIntegrationTest {
 	@DisplayName("Order 업데이트 - Fail - OrderNotFound")
 	void testUpdateOrderFailOrderNotFound() {
 		// Given
-		String userId = "testUser";
+		UUID userId = UUID.randomUUID();
 		UUID failRecipientsId = UUID.randomUUID();
 
 		OrderUpdateReqDto orderUpdateReqDto = new OrderUpdateReqDto(testRecipientsId, 100, "update Test",
@@ -204,7 +204,7 @@ public class OrderServiceIntegrationTest {
 	@DisplayName("Order 업데이트 - Fail - IllegalArgumentException")
 	void testUpdateOrderFailIllegalArgumentException() {
 		// Given
-		String userId = "testUser";
+		UUID userId = UUID.randomUUID();
 		UUID failRecipientsId = UUID.randomUUID();
 
 		OrderUpdateReqDto orderUpdateReqDto = new OrderUpdateReqDto(failRecipientsId, 100, "update Test",
@@ -223,7 +223,7 @@ public class OrderServiceIntegrationTest {
 	@DisplayName("Order 논리적 삭제 - Success")
 	void testDeleteOrderSuccess() {
 		// Given
-		String userId = "testUser";
+		UUID userId = UUID.randomUUID();
 
 		// When
 		orderService.deleteOrder(testOrderId, userId);
@@ -238,7 +238,7 @@ public class OrderServiceIntegrationTest {
 	@DisplayName("Order 논리적 삭제 - Fail - OrderNotFound")
 	void testDeleteOrderFailOrderNotFound() {
 		// Given
-		String userId = "testUser";
+		UUID userId = UUID.randomUUID();
 		UUID failOrderId = UUID.randomUUID();
 
 		// When & Then

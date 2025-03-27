@@ -14,7 +14,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class RabbitMqMessageService implements OrderMessageService {
+public class OrderMessageServiceImpl implements OrderMessageService {
 	private final RabbitTemplate rabbitTemplate;
 
 	@Value("${stockMessage.queue.stock.request}")
