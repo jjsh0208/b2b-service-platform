@@ -19,6 +19,13 @@ public class OrderExceptionHandler {
 			.body(OrderResponse.failure(HttpStatus.NOT_FOUND.value(), ex.getMessage()));
 	}
 
+	@ExceptionHandler(IllegalArgumentException.class)
+	@ResponseStatus(HttpStatus.BAD_REQUEST) // 400 BAD_REQUEST 응답 상태 코드
+	public ResponseEntity<OrderResponse<String>> illegalArgumentException(IllegalArgumentException ex) {
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+			.body(OrderResponse.failure(HttpStatus.BAD_REQUEST.value(), ex.getMessage()));
+	}
+
 	@ExceptionHandler(Exception.class)
 	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
 	public ResponseEntity<OrderResponse<String>> exception(Exception ex) {
