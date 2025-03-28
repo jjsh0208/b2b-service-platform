@@ -37,8 +37,8 @@ public class HubInitDataTest {
 		// given
 		HubSearchRequestDto searchRequest = HubSearchRequestDto.builder()
 			.page(0)
-			.size(20) // 17개 이상의 크기로 설정
-			.sortOption(HubSortOption.CREATED_AT) // 적절한 정렬 옵션
+			.size(20)
+			.sortOption(HubSortOption.CREATED_AT)
 			.sortOrder(Sort.Direction.ASC)
 			.build();
 
@@ -47,6 +47,10 @@ public class HubInitDataTest {
 
 		// then
 		assertThat(hubPage.getTotalElements()).isEqualTo(17);
+
+		// 1페이지 당 크기는 10,30,50 고정 (기본 10)
+		assertThat(hubPage.getNumber()).isNotEqualTo(1);
+		assertThat(hubPage.getTotalPages()).isEqualTo(2);
 	}
 
 	@Test
