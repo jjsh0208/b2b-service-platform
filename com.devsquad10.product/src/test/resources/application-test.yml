@@ -5,6 +5,12 @@ spring:
     username: testdb
     password:
 
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      username: default
+      password: systempass
   jpa:
     hibernate:
       ddl-auto: create-drop
@@ -14,3 +20,6 @@ eureka:
   client:
     service-url:
       defaultZone: http://localhost:19090/eureka/  # Eureka 서버의 URL을 지정
+
+server:
+  port: 19097

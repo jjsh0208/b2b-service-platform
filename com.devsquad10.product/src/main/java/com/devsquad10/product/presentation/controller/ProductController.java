@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -19,9 +20,12 @@ import com.devsquad10.product.application.dto.ProductReqDto;
 import com.devsquad10.product.application.dto.ProductResDto;
 import com.devsquad10.product.application.dto.response.ProductResponse;
 import com.devsquad10.product.application.service.ProductService;
+import com.devsquad10.product.infrastructure.swagger.ProductSwaggerDocs;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
+@Tag(name = "Product API", description = "상품 관련 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/product")
@@ -30,14 +34,17 @@ public class ProductController {
 	private final ProductService productService;
 
 	@PostMapping
-	public ResponseEntity<ProductResponse<ProductResDto>> createProduct(@RequestBody ProductReqDto productReqDto) {
+	@ProductSwaggerDocs.CreateProduct
+	public ResponseEntity<ProductResponse<ProductResDto>> createProduct(@RequestBody ProductReqDto productReqDto,
+		@RequestHeader("X-User-Id") UUID userId) {
 
 		return ResponseEntity.status(HttpStatus.OK)
-			.body(ProductResponse.success(HttpStatus.OK.value(), productService.createProduct(productReqDto)));
+			.body(ProductResponse.success(HttpStatus.OK.value(), productService.createProduct(productReqDto, userId)));
 
 	}
 
 	@GetMapping("/{id}")
+	@ProductSwaggerDocs.GetProductById
 	public ResponseEntity<ProductResponse<ProductResDto>> getProductById(@PathVariable("id") UUID id) {
 
 		return ResponseEntity.status(HttpStatus.OK)
@@ -45,6 +52,7 @@ public class ProductController {
 	}
 
 	@GetMapping("/search")
+	@ProductSwaggerDocs.SearchProducts
 	public ResponseEntity<ProductResponse<PageProductResponseDto>> searchProducts(
 		@RequestParam(required = false) String q,
 		@RequestParam(required = false) String category,
@@ -59,15 +67,19 @@ public class ProductController {
 	}
 
 	@PatchMapping("/{id}")
+	@ProductSwaggerDocs.UpdateProduct
 	public ResponseEntity<ProductResponse<ProductResDto>> updateProduct(@PathVariable("id") UUID id,
-		@RequestBody ProductReqDto productReqDto) {
+		@RequestBody ProductReqDto productReqDto, @RequestHeader("X-User-Id") UUID userId) {
 		return ResponseEntity.status(HttpStatus.OK)
-			.body(ProductResponse.success(HttpStatus.OK.value(), productService.updateProduct(id, productReqDto)));
+			.body(ProductResponse.success(HttpStatus.OK.value(),
+				productService.updateProduct(id, productReqDto, userId)));
 	}
 
 	@DeleteMapping("/{id}")
-	public ResponseEntity<ProductResponse<String>> deleteProduct(@PathVariable("id") UUID id) {
-		productService.deleteProduct(id);
+	@ProductSwaggerDocs.DeleteProduct
+	public ResponseEntity<ProductResponse<String>> deleteProduct(@PathVariable("id") UUID id,
+		@RequestHeader("X-User-Id") UUID userId) {
+		productService.deleteProduct(id, userId);
 		return ResponseEntity.status(HttpStatus.OK)
 			.body(ProductResponse.success(HttpStatus.OK.value(), "Product Deleted successfully"));
 	}

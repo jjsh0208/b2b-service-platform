@@ -7,9 +7,7 @@
         <processorPath useClasspath="false">
           <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/1.18.36/5a30490a6e14977d97d9c73c924c1f1b5311ea95/lombok-1.18.36.jar" />
         </processorPath>
-        <module name="b2b.com.devsquad10.common.main" />
         <module name="b2b.com.devsquad10.gateway.main" />
-        <module name="b2b.com.devsquad10.message.main" />
       </profile>
       <profile name="Gradle Imported" enabled="true">
         <outputRelativeToContentRoot value="true" />
@@ -29,6 +27,7 @@
         <module name="b2b.com.devsquad10.order.main" />
         <module name="b2b.com.devsquad10.product.main" />
         <module name="b2b.com.devsquad10.hub.main" />
+        <module name="b2b.com.devsquad10.message.main" />
         <module name="b2b.com.devsquad10.company.main" />
         <module name="b2b.com.devsquad10.shipping.main" />
       </profile>

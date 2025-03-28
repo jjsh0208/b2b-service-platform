@@ -2,6 +2,12 @@ spring:
   application:
     name: company
 
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      username: default
+      password: systempass
   datasource:
     driver-class-name: org.h2.Driver
     hikari.jdbc-url: jdbc:h2:mem:test_db;
@@ -12,3 +18,10 @@ spring:
     hibernate:
       ddl-auto: create-drop
     show-sql: true
+
+#  test:
+#    database:
+#      replace: none  # 내장 DB 사용 시 필요한 설정
+
+server:
+  port: 19093

@@ -22,9 +22,12 @@ import com.devsquad10.order.application.dto.OrderUpdateReqDto;
 import com.devsquad10.order.application.dto.PageOrderResponseDto;
 import com.devsquad10.order.application.dto.response.OrderResponse;
 import com.devsquad10.order.application.service.OrderService;
+import com.devsquad10.order.infrastructure.swgger.OrderSwaggerDocs;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
+@Tag(name = "Order API", description = "주문 관련 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/order")
@@ -33,20 +36,23 @@ public class OrderController {
 	private final OrderService orderService;
 
 	@PostMapping
+	@OrderSwaggerDocs.CreateOrder
 	public ResponseEntity<OrderResponse<OrderResDto>> createOrder(@RequestBody OrderReqDto orderReqDto,
-		@RequestHeader("X-User-Id") String userId) {
+		@RequestHeader("X-User-Id") UUID userId) {
 
 		return ResponseEntity.status(HttpStatus.OK)
 			.body(OrderResponse.success(HttpStatus.OK.value(), orderService.createOrder(orderReqDto, userId)));
 	}
 
 	@GetMapping("/{id}")
+	@OrderSwaggerDocs.GetOrderById
 	public ResponseEntity<OrderResponse<OrderResDto>> getOrderById(@PathVariable("id") UUID id) {
 		return ResponseEntity.status(HttpStatus.OK)
 			.body(OrderResponse.success(HttpStatus.OK.value(), orderService.getOrderById(id)));
 	}
 
 	@GetMapping("/search")
+	@OrderSwaggerDocs.searchOrders
 	public ResponseEntity<OrderResponse<PageOrderResponseDto>> searchOrders(
 		@RequestParam(required = false) String q,
 		@RequestParam(required = false) String category,
@@ -62,27 +68,31 @@ public class OrderController {
 	}
 
 	@PatchMapping("/{id}")
+	@OrderSwaggerDocs.UpdateOrder
 	public ResponseEntity<OrderResponse<OrderResDto>> updateOrder(@PathVariable("id") UUID id,
-		@RequestBody OrderUpdateReqDto orderUpdateReqDto, @RequestHeader("X-User-Id") String userId) {
+		@RequestBody OrderUpdateReqDto orderUpdateReqDto, @RequestHeader("X-User-Id") UUID userId) {
 		return ResponseEntity.status(HttpStatus.OK)
 			.body(
 				OrderResponse.success(HttpStatus.OK.value(), orderService.updateOrder(id, orderUpdateReqDto, userId)));
 	}
 
 	@DeleteMapping("/{id}")
+	@OrderSwaggerDocs.DeleteOrder
 	public ResponseEntity<OrderResponse<String>> deleteOrder(@PathVariable("id") UUID id,
-		@RequestHeader("X-User-Id") String userId) {
+		@RequestHeader("X-User-Id") UUID userId) {
 		orderService.deleteOrder(id, userId);
 		return ResponseEntity.status(HttpStatus.OK)
 			.body(OrderResponse.success(HttpStatus.OK.value(), "Order Deleted successfully"));
 	}
 
 	@PatchMapping("/shipping/{shippingId}")
+	@OrderSwaggerDocs.UpdateOrderStatusToShipped
 	public void updateOrderStatusToShipped(@PathVariable("shippingId") UUID shippingId) {
 		orderService.updateOrderStatusToShipped(shippingId);
 	}
 
 	@GetMapping("/products/{id}")
+	@OrderSwaggerDocs.GetOrderProductDetails
 	public OrderFeignClientDto getOrderProductDetails(@PathVariable(name = "id") UUID id) {
 		return orderService.getOrderProductDetails(id);
 	}

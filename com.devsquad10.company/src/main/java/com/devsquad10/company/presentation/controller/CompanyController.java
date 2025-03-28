@@ -21,9 +21,12 @@ import com.devsquad10.company.application.dto.PageCompanyResponseDto;
 import com.devsquad10.company.application.dto.ShippingCompanyInfoDto;
 import com.devsquad10.company.application.dto.response.CompanyResponse;
 import com.devsquad10.company.application.service.CompanyService;
+import com.devsquad10.company.infrastructure.swagger.CompanySwaggerDocs;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
+@Tag(name = "Company API", description = "업체 관련 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/company")
@@ -32,8 +35,9 @@ public class CompanyController {
 	private final CompanyService companyService;
 
 	@PostMapping
+	@CompanySwaggerDocs.CreateCompany
 	public ResponseEntity<CompanyResponse<CompanyResDto>> createCompany(
-		@RequestBody CompanyReqDto companyReqDto, @RequestHeader("X-User-Id") String userId) {
+		@RequestBody CompanyReqDto companyReqDto, @RequestHeader("X-User-Id") UUID userId) {
 
 		return ResponseEntity.status(HttpStatus.OK)
 			.body(CompanyResponse.success(HttpStatus.OK.value(), companyService.createCompany(companyReqDto, userId)));
@@ -41,12 +45,14 @@ public class CompanyController {
 	}
 
 	@GetMapping("/{id}")
+	@CompanySwaggerDocs.GetCompanyById
 	public ResponseEntity<CompanyResponse<CompanyResDto>> getCompanyById(@PathVariable("id") UUID id) {
 		return ResponseEntity.status(HttpStatus.OK)
 			.body(CompanyResponse.success(HttpStatus.OK.value(), companyService.getCompanyById(id)));
 	}
 
 	@GetMapping("/search")
+	@CompanySwaggerDocs.SearchCompanies
 	public ResponseEntity<CompanyResponse<PageCompanyResponseDto>> searchCompanies(
 		@RequestParam(required = false) String q,
 		@RequestParam(required = false) String category,
@@ -62,30 +68,37 @@ public class CompanyController {
 	}
 
 	@PatchMapping("/{id}")
+	@CompanySwaggerDocs.UpdateCompany
 	public ResponseEntity<CompanyResponse<CompanyResDto>> updateCompany(@PathVariable("id") UUID id,
-		@RequestBody CompanyReqDto companyReqDto) {
+		@RequestBody CompanyReqDto companyReqDto, @RequestHeader("X-User-Id") UUID userId) {
 		return ResponseEntity.status(HttpStatus.OK)
-			.body(CompanyResponse.success(HttpStatus.OK.value(), companyService.updateCompany(id, companyReqDto)));
+			.body(CompanyResponse.success(HttpStatus.OK.value(),
+				companyService.updateCompany(id, companyReqDto, userId)));
 	}
 
 	@DeleteMapping("/{id}")
-	public ResponseEntity<CompanyResponse<String>> deleteCompany(@PathVariable("id") UUID id) {
-		companyService.deleteCompany(id);
+	@CompanySwaggerDocs.DeleteCompany
+	public ResponseEntity<CompanyResponse<String>> deleteCompany(@PathVariable("id") UUID id,
+		@RequestHeader("X-User-Id") UUID userId) {
+		companyService.deleteCompany(id, userId);
 		return ResponseEntity.status(HttpStatus.OK)
 			.body(CompanyResponse.success(HttpStatus.OK.value(), "Company Deleted successfully"));
 	}
 
 	@GetMapping("/exists/{uuid}")
+	@CompanySwaggerDocs.FindSupplierHubId
 	public UUID findSupplierHubIdByCompanyId(@PathVariable("uuid") UUID uuid) {
 		return companyService.findSupplierHubIdByCompanyId(uuid);  // 존재하면 hubId, 없으면 null
 	}
 
 	@GetMapping("/address/{id}")
+	@CompanySwaggerDocs.FindRecipientAddress
 	public String findRecipientAddressByCompanyId(@PathVariable("id") UUID id) {
 		return companyService.findRecipientAddressByCompanyId(id);
 	}
 
 	@GetMapping("/info/{id}")
+	@CompanySwaggerDocs.FindShippingCompanyInfo
 	public ShippingCompanyInfoDto findShippingCompanyInfo(@PathVariable("id") UUID id) {
 		return companyService.findShippingCompanyInfo(id);
 	}
