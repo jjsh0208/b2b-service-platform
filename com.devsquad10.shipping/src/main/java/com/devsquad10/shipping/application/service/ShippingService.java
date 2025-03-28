@@ -154,23 +154,23 @@ public class ShippingService {
 	}
 
 	// TODO: 테스트 후, 삭제(함께 슬랙 메시지 발송)
-	// 슬랙 발송 API 테스트
-	public ShippingClientDataResponseDto sendSlackMessage(UUID orderId) {
-		log.info("서비스 시작");
-		ShippingClientDataResponseDto responseDto = sendSlackNotification(orderId);
-		log.info("서비스 끝 OrderId: {}", responseDto.getRecipientId());
-		return responseDto;
-	}
-
-	private ShippingClientDataResponseDto sendSlackNotification(UUID orderId) {
-		log.info("메시지 호출 전");
-		ShippingClientDataResponseDto response = messageClient.getShippingClientData(orderId);
-		log.info("메시지 호출 후");
-		if(response == null) {
-			throw new EntityNotFoundException("슬랙 메시지가 내용이 없습니다.");
-		}
-		return response;
-	}
+	// // 슬랙 발송 API 테스트
+	// public ShippingClientDataResponseDto sendSlackMessage(UUID orderId) {
+	// 	log.info("서비스 시작");
+	// 	ShippingClientDataResponseDto responseDto = sendSlackNotification(orderId);
+	// 	log.info("서비스 끝 OrderId: {}", responseDto.getRecipientId());
+	// 	return responseDto;
+	// }
+	//
+	// private ShippingClientDataResponseDto sendSlackNotification(UUID orderId) {
+	// 	log.info("메시지 호출 전");
+	// 	ShippingClientDataResponseDto response = messageClient.getShippingClientData(orderId);
+	// 	log.info("메시지 호출 후");
+	// 	if(response == null) {
+	// 		throw new EntityNotFoundException("슬랙 메시지가 내용이 없습니다.");
+	// 	}
+	// 	return response;
+	// }
 
 	// 권한 - ALL + 담당 HUB, DVL_AGENT
 	@Transactional(readOnly = true)
