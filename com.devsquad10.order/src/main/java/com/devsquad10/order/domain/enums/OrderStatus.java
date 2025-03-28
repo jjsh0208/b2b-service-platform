@@ -9,8 +9,7 @@ public enum OrderStatus {
 	INVALID_RECIPIENT("INVALID_RECIPIENT"), // 수령 업체를 파악할 수 없음
 	WAITING_FOR_SHIPMENT("WAITING_FOR_SHIPMENT"), // 배송 대기
 	SHIPPED("SHIPPED"), // 배송 출발
-	DELIVERED("DELIVERED"), // 배송 접수 실패;
-	ORDER_FAILED("ORDER_FAILED"); // 배송 완료
+	ORDER_FAILED("ORDER_FAILED"); // 주문 실패
 
 	private final String status;
 
