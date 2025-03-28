@@ -23,11 +23,11 @@ public class QShippingAgent extends EntityPathBase<ShippingAgent> {
 
     public final DateTimePath<java.time.LocalDateTime> createdAt = createDateTime("createdAt", java.time.LocalDateTime.class);
 
-    public final StringPath createdBy = createString("createdBy");
+    public final ComparablePath<java.util.UUID> createdBy = createComparable("createdBy", java.util.UUID.class);
 
     public final DateTimePath<java.time.LocalDateTime> deletedAt = createDateTime("deletedAt", java.time.LocalDateTime.class);
 
-    public final StringPath deletedBy = createString("deletedBy");
+    public final ComparablePath<java.util.UUID> deletedBy = createComparable("deletedBy", java.util.UUID.class);
 
     public final ComparablePath<java.util.UUID> hubId = createComparable("hubId", java.util.UUID.class);
 
@@ -45,7 +45,7 @@ public class QShippingAgent extends EntityPathBase<ShippingAgent> {
 
     public final DateTimePath<java.time.LocalDateTime> updatedAt = createDateTime("updatedAt", java.time.LocalDateTime.class);
 
-    public final StringPath updatedBy = createString("updatedBy");
+    public final ComparablePath<java.util.UUID> updatedBy = createComparable("updatedBy", java.util.UUID.class);
 
     public QShippingAgent(String variable) {
         super(ShippingAgent.class, forVariable(variable));
