@@ -20,9 +20,12 @@ import com.devsquad10.product.application.dto.ProductReqDto;
 import com.devsquad10.product.application.dto.ProductResDto;
 import com.devsquad10.product.application.dto.response.ProductResponse;
 import com.devsquad10.product.application.service.ProductService;
+import com.devsquad10.product.infrastructure.swagger.ProductSwaggerDocs;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
+@Tag(name = "Product API", description = "상품 관련 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/product")
@@ -31,6 +34,7 @@ public class ProductController {
 	private final ProductService productService;
 
 	@PostMapping
+	@ProductSwaggerDocs.CreateProduct
 	public ResponseEntity<ProductResponse<ProductResDto>> createProduct(@RequestBody ProductReqDto productReqDto,
 		@RequestHeader("X-User-Id") UUID userId) {
 
@@ -40,6 +44,7 @@ public class ProductController {
 	}
 
 	@GetMapping("/{id}")
+	@ProductSwaggerDocs.GetProductById
 	public ResponseEntity<ProductResponse<ProductResDto>> getProductById(@PathVariable("id") UUID id) {
 
 		return ResponseEntity.status(HttpStatus.OK)
@@ -47,6 +52,7 @@ public class ProductController {
 	}
 
 	@GetMapping("/search")
+	@ProductSwaggerDocs.SearchProducts
 	public ResponseEntity<ProductResponse<PageProductResponseDto>> searchProducts(
 		@RequestParam(required = false) String q,
 		@RequestParam(required = false) String category,
@@ -61,6 +67,7 @@ public class ProductController {
 	}
 
 	@PatchMapping("/{id}")
+	@ProductSwaggerDocs.UpdateProduct
 	public ResponseEntity<ProductResponse<ProductResDto>> updateProduct(@PathVariable("id") UUID id,
 		@RequestBody ProductReqDto productReqDto, @RequestHeader("X-User-Id") UUID userId) {
 		return ResponseEntity.status(HttpStatus.OK)
@@ -69,6 +76,7 @@ public class ProductController {
 	}
 
 	@DeleteMapping("/{id}")
+	@ProductSwaggerDocs.DeleteProduct
 	public ResponseEntity<ProductResponse<String>> deleteProduct(@PathVariable("id") UUID id,
 		@RequestHeader("X-User-Id") UUID userId) {
 		productService.deleteProduct(id, userId);
