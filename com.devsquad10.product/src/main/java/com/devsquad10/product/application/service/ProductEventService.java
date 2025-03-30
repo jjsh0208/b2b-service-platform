@@ -24,6 +24,18 @@ public class ProductEventService {
 	private final ProductRepository productRepository;
 	private final ProductMessageService productMessageService;
 
+	/**
+	 * 재고 차감 처리
+	 *
+	 * 주문에 대한 재고 차감을 처리하는 메서드로, 비관적 락을 사용하여 해당 상품의 재고를 차감한다.
+	 * 1. 상품 정보를 조회할 때 비관적 락을 적용하여 다른 트랜잭션이 해당 상품의 재고를 변경하지 않도록 한다.
+	 * 2. 재고가 부족한 경우, 재고 차감을 수행하지 않고 "재고 부족" 메시지를 전송한다.
+	 * 3. 재고가 충분한 경우, 재고를 차감하고, 만약 재고가 0이 되면 "품절" 상태로 변경한다.
+	 * 4. 차감 메시지와 품절 메시지를 메시징 시스템에 전송한다.
+	 *
+	 * @param stockDecrementMessage 재고 차감 요청 메시지
+	 * @throws ProductNotFoundException 상품이 존재하지 않을 경우 예외 발생
+	 */
 	public void decreaseStock(StockDecrementMessage stockDecrementMessage) {
 		UUID targetProductId = stockDecrementMessage.getProductId();
 		int orderQuantity = stockDecrementMessage.getQuantity();
@@ -56,6 +68,17 @@ public class ProductEventService {
 		productMessageService.sendStockDecrementMessage(stockDecrementMessage, product, "SUCCESS");
 	}
 
+	/**
+	 * 재고 복원 처리
+	 *
+	 * 주문 취소나 다른 이유로 상품의 재고를 복원한다.
+	 * 1. 주어진 상품 ID로 상품을 조회하고, 해당 상품이 존재하는지 확인.
+	 * 2. 상품의 재고를 복원 수량만큼 증가시킨다.
+	 * 3. 재고 복원 후 메시지를 기록한다.
+	 *
+	 * @param stockReversalMessage 재고 복원 요청 메시지
+	 * @throws ProductNotFoundException 상품이 존재하지 않을 경우 예외 발생
+	 */
 	public void recoveryStock(StockReversalMessage stockReversalMessage) {
 
 		UUID productId = stockReversalMessage.getProductId();
