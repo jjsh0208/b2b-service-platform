@@ -37,9 +37,12 @@ public class CompanyService {
 	/**
 	 * 업체 등록 기능
 	 *
-	 * 주어진 회사 요청 DTO( CompanyReqDto )를 기반으로 새 회사를 등록한다.
-	 * 1. 허브 ID가 존재하는지 확인
-	 * 2. 존재하면 회사 정보를 저장 후 DTO ( CompanyResDto )로 반환
+	 * 주어진 회사 요청 DTO( CompanyReqDto )를 기반으로 새 업체를 등록한다.
+	 * 1. 허브 ID가 존재하는지 HubClient를 통해 확인한다.
+	 * 2. 허브 ID가 유효하면, 해당 정보를 바탕으로 회사를 저장합니다.
+	 * 3. 저장된 회사를 DTO( CompanyResDto ) 형식으로 변환하여 반환한다.
+	 *
+	 * 회사를 등록할 때 담당자 ID는 사용자가 로그인 후 전달한 유저 ID를 사용하여 저장한다.
 	 *
 	 * @param companyReqDto 업체 등록에 필요한 정보를 포함한 DTO
 	 * @param userId 요청을 수행하는 사용자의 ID
@@ -68,13 +71,15 @@ public class CompanyService {
 	}
 
 	/**
-	 * 특정 ID의 업체 조회 기능
+	 * 업체 조회 기능
 	 *
-	 * 주어진 업체 ID를 기반으로 업체를 조회합니다.
-	 * 1. 업체 ID로 데이터를 조회
-	 * 2. 존재하지 않으면 예외 발생
+	 * 특정 ID를 기반으로 업체를 조회한다. (캐싱 적용)
+	 * 업체 조회 시 캐시에서 먼저 데이터를 확인하고, 캐시가 없으면 DB에서 조회하여 반환한다.
 	 *
-	 * @param id 조회할 ㅇ버체의 ID
+	 * 이 과정에서, `@Cacheable`을 사용하여 업체 정보를 캐시하며, 해당 ID로 조회된 업체가 없다면 `CompanyNotFoundException`을 발생시킨다.
+	 * 캐시가 존재할 경우, 캐시된 업체 데이터를 빠르게 반환한다.
+	 *
+	 * @param id 조회할 업체의 ID
 	 * @return 조회된 업체 정보를 담은 CompanyResDto 객체
 	 * @throws CompanyNotFoundException 해당 ID의 업체가 존재하지 않을 경우 예외 발생
 	 */
@@ -89,7 +94,11 @@ public class CompanyService {
 	/**
 	 * 업체 검색 기능
 	 *
-	 * 검색어(q), 카테고리, 페이지네이션 정보(page, size, sort, order)를 기반으로 회사를 검색합니다.
+	 * 주어진 조건을 기반으로 업체 목록을 검색한다. ( 캐싱 적용 )
+	 * 검색 조건에 따라 업체를 조회하고, 결과를 페이징 처리하여 반환한다.
+	 *
+	 * 이 과정에서 `@Cacheable`을 사용하여 검색 조건에 맞는 업체 목록을 캐시한다. 캐시가 존재하면 빠르게 반환하며,
+	 * 캐시가 없을 경우 DB에서 검색하여 결과를 반환한다.
 	 *
 	 * @param q 검색어
 	 * @param category 카테고리 ( 업체명 , 업체 주소, 업체 타입 )
@@ -115,8 +124,13 @@ public class CompanyService {
 	/**
 	 * 업체 정보 업데이트 기능
 	 *
-	 * 특정 업체 ID를 기반으로 주어진 요청 DTO( companyReqDto )를 이용하여 업체를 업데이트합니다.
+	 * 주어진 회사 요청 DTO( CompanyReqDto )를 기반으로 업체 정보를 업데이트한다
+	 * 1. 허브 ID가 존재하는지 HubClient를 통해 확인한다.
+	 * 2. 허브 ID가 유효하면, 해당 정보를 바탕으로 회사를 업데이트한다.
+	 * 3. 업데이트된 회사를 DTO( CompanyResDto ) 형식으로 변환하여 반환한다.
 	 *
+	 * 업체 정보를 업데이트하고, `@CachePut`과 `@Caching`을 통해 캐시를 갱신하며,
+	 * `companySearchCacheSearchCache`를 비운다.
 	 * @param id 업데이트할 업체의 ID
 	 * @param companyReqDto 업데이트할 정보가 담긴 DTO
 	 * @param userId 요청을 수행하는 사용자의 ID
@@ -150,9 +164,15 @@ public class CompanyService {
 	}
 
 	/**
-	 * 업체 삭제 기능 (소프트 삭제)
+	 * 업체 삭제 기능
 	 *
-	 * 특정 업체 ID를 기반으로 해당 업체를 삭제(soft delete)합니다.
+	 * 주어진 ID에 해당하는 업체을 삭제한다. (삭제 날짜와 삭제자를 기록하여 'soft delete' 처리)
+	 * 1. 주어진 ID에 해당하는 업체가 존재하는지 확인
+	 * 2. 상품이 존재하면 해당 상품의 `deletedAt`과 `deletedBy` 값을 업데이트하여 상품을 삭제 처리
+	 * 3. 삭제된 상품은 캐시에서 제거된다.
+	 *
+	 * 이 과정에서 `@Caching`을 사용하여 상품에 관련된 두 가지 캐시(`productCache`와 `productSearchCache`)를 갱신한다.
+	 * `@CacheEvict`는 해당 상품의 캐시를 삭제하여, 삭제된 상품에 대한 캐시된 정보가 더 이상 사용되지 않도록 한다.
 	 *
 	 * @param id 삭제할 업체의 ID
 	 * @param userId 요청을 수행하는 사용자의 ID
