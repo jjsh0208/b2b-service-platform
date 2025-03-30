@@ -17,15 +17,19 @@ import lombok.RequiredArgsConstructor;
 public class OrderMessageServiceImpl implements OrderMessageService {
 	private final RabbitTemplate rabbitTemplate;
 
+	// 재고 감소 요청 큐에 대한 설정값
 	@Value("${stockMessage.queue.stock.request}")
 	private String queueRequestStock;
 
+	// 재고 복원 요청 큐에 대한 설정값
 	@Value("${stockMessage.queue.stockRecovery.request}")
 	private String queueStockRecovery;
 
+	// 배송 생성 요청 큐에 대한 설정값
 	@Value("${shippingMessage.queue.shipping.request}")
 	private String queueShippingCreateRequest;
 
+	// 배송 수정 요청 큐에 대한 설정값
 	@Value("${shippingMessage.queue.shipping_update.request}")
 	private String queueShippingUpdateRequest;
 
