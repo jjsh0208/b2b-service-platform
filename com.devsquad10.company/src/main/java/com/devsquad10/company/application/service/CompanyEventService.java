@@ -24,9 +24,14 @@ public class CompanyEventService {
 	private final UserClient userClient;
 	private final MessageClient messageClient;
 
+	/**
+	 * 재고 소진 메시지를 담당자에게 전송
+	 *
+	 * @param stockSoldOutMessage 재고 소진 메시지 객체 (공급업체 ID, 상품명, 소진 일자 포함)
+	 * @throws CompanyNotFoundException 공급업체 ID에 해당하는 회사를 찾을 수 없을 때 발생
+	 * @throws IllegalArgumentException 공급업체 담당자의 Slack ID가 존재하지 않을 경우 발생
+	 */
 	public void stockSoldMessageSend(StockSoldOutMessage stockSoldOutMessage) {
-		//message ( 담당자 id , 재고명 , 재고 소진 일자 )
-
 		Company company = companyRepository.findByIdAndDeletedAtIsNull(stockSoldOutMessage.getSupplierId())
 			.orElseThrow(
 				() -> new CompanyNotFoundException("Company Not Found By Id : " + stockSoldOutMessage.getSupplierId()));
