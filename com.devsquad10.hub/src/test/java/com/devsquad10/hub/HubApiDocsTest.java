@@ -18,6 +18,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import com.devsquad10.hub.application.dto.req.HubCreateRequestDto;
 import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper;
 import com.epages.restdocs.apispec.ResourceSnippetParameters;
+import com.epages.restdocs.apispec.Schema;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.transaction.Transactional;
@@ -61,6 +62,8 @@ public class HubApiDocsTest {
 					resource(ResourceSnippetParameters.builder()
 						.tag("Hub API")
 						.description("허브 생성 API")
+						.requestSchema(Schema.schema("HubCreateRequestDto"))
+						.responseSchema(Schema.schema("HubCreateResponseDto"))
 						.requestFields(
 							fieldWithPath("name").description("허브 이름"),
 							fieldWithPath("address").description("허브 주소"),
