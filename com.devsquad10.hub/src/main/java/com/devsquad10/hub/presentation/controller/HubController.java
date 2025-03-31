@@ -23,18 +23,22 @@ import com.devsquad10.hub.application.dto.res.HubGetOneResponseDto;
 import com.devsquad10.hub.application.dto.res.HubUpdateResponseDto;
 import com.devsquad10.hub.application.dto.res.PagedHubResponseDto;
 import com.devsquad10.hub.application.service.HubService;
+import com.devsquad10.hub.presentation.documentation.HubSwaggerDocs;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/hub")
+@Tag(name = "허브 API", description = "허브 위치에 대한 API")
 public class HubController {
 
 	private final HubService hubService;
 
 	@PostMapping
+	@HubSwaggerDocs.CreateHub
 	public ResponseEntity<ApiResponse<HubCreateResponseDto>> createHub(
 		@Valid @RequestBody HubCreateRequestDto request
 	) {
@@ -48,6 +52,7 @@ public class HubController {
 	}
 
 	@GetMapping("/{id}")
+	@HubSwaggerDocs.GetHub
 	public ResponseEntity<ApiResponse<HubGetOneResponseDto>> getHub(
 		@PathVariable UUID id
 	) {
@@ -61,6 +66,7 @@ public class HubController {
 	}
 
 	@PatchMapping("/{id}")
+	@HubSwaggerDocs.UpdateHub
 	public ResponseEntity<ApiResponse<HubUpdateResponseDto>> updateHub(
 		@PathVariable UUID id,
 		@Valid @RequestBody HubUpdateRequestDto request
@@ -75,6 +81,7 @@ public class HubController {
 	}
 
 	@DeleteMapping("/{id}")
+	@HubSwaggerDocs.DeleteHub
 	public ResponseEntity<ApiResponse<String>> deleteHub(
 		@PathVariable UUID id
 	) {
@@ -88,6 +95,7 @@ public class HubController {
 	}
 
 	@GetMapping
+	@HubSwaggerDocs.SearchHubs
 	public ResponseEntity<ApiResponse<PagedHubResponseDto>> getAllHubs(
 		@ModelAttribute @Valid HubSearchRequestDto request
 	) {
@@ -101,11 +109,13 @@ public class HubController {
 	}
 
 	@GetMapping("/exists/{uuid}")
+	@HubSwaggerDocs.ExistsHub
 	public Boolean isHubExists(@PathVariable(name = "uuid") UUID uuid) {
 		return hubService.existById(uuid);
 	}
 
 	@GetMapping("/shipping/{id}")
+	@HubSwaggerDocs.GetHubName
 	public String getHubName(@PathVariable(name = "id") UUID id) {
 		return hubService.getOneHub(id).getName();
 	}

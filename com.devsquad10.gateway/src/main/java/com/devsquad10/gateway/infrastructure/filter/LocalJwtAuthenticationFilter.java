@@ -30,10 +30,22 @@ public class LocalJwtAuthenticationFilter implements GlobalFilter {
 	@Value("${service.jwt.secret-key}")
 	private String secretKey;
 
+	@Value("${spring.profiles.active}")
+	private String activeProfile;
+
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 		String path = exchange.getRequest().getURI().getPath();
 		String method = exchange.getRequest().getMethod().toString();
+
+		// Swagger/API 문서
+		boolean isDocPath = path.startsWith("/springdoc") || path.startsWith("/v3/api-docs") ||
+			path.equals("/docs") || path.contains("swagger-ui");
+
+		// 개발 환경에서만 문서 페이지 접근 가능
+		if (isDocPath && activeProfile.equals("dev")) {
+			return chain.filter(exchange);
+		}
 
 		// 로그인 & 회원가입 API는 토큰 검증 제외
 		if (path.equals("/api/user/signIn") || path.equals("/api/user/signup")) {
