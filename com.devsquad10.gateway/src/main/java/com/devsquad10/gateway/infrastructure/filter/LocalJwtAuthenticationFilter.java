@@ -30,7 +30,7 @@ public class LocalJwtAuthenticationFilter implements GlobalFilter {
 	@Value("${service.jwt.secret-key}")
 	private String secretKey;
 
-	@Value("${spring.profiles.active}")
+	@Value("${spring.profiles.active:default}")
 	private String activeProfile;
 
 	@Override
