@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import com.devsquad10.shipping.infrastructure.client.dto.OrderFeignClientDto;
 
-@FeignClient(name = "order", url = "http://localhost:19096/api/order")
+@FeignClient(name = "order", url = "http://order:8080/api/order")
 public interface OrderClient{
 
 	@GetMapping("/products/{id}")
