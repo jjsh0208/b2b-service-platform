@@ -83,6 +83,7 @@ public class OrderEventService {
 
 	/**
 	 * 배송 생성 실패 시 재시도 요청을 한다.
+	 * 재시도 횟수를 Redis에서 확인하고, 3회 이상 실패한 경우 주문 상태를 "ORDER_FAILED"로 변경한다.
 	 *
 	 * @param shippingResponseMessage 배송 생성 응답 메시지
 	 */
