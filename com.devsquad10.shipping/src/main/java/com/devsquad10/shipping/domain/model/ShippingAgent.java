@@ -74,7 +74,7 @@ public class ShippingAgent {
 
 	@CreatedBy
 	@Column(updatable = false, nullable = false)
-	private String createdBy;
+	private UUID createdBy;
 
 	@LastModifiedDate
 	@Temporal(TemporalType.TIMESTAMP)
@@ -83,33 +83,33 @@ public class ShippingAgent {
 
 	@LastModifiedBy
 	@Column(insertable = false)
-	private String updatedBy;
+	private UUID updatedBy;
 
 	@Column
 	private LocalDateTime deletedAt;
 
 	@Column
-	private String deletedBy;
+	private UUID deletedBy;
 
 	// TODO: user 설정
 	@PrePersist
 	public void prePersist() {
 		this.createdAt = LocalDateTime.now(); // 현재 시간으로 설정
-		this.createdBy = "defaultUser"; // 현재 사용자로 설정
+		this.createdBy = UUID.randomUUID(); // 현재 사용자로 설정
 	}
 
 	// TODO: user 설정
 	@PreUpdate
 	public void preUpdate() {
 		this.updatedAt = LocalDateTime.now();
-		this.updatedBy = "updateUser";
+		this.updatedBy = UUID.randomUUID();
 	}
 
 	// TODO: user 설정
 	// 소프트 삭제 처리
 	public ShippingAgent softDelete() {
 		this.deletedAt = LocalDateTime.now();
-		this.deletedBy = "deleteByUser";
+		this.deletedBy = UUID.randomUUID();
 		return this;
 	}
 

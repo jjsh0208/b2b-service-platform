@@ -70,7 +70,7 @@ public class ShippingService {
 		put = {@CachePut(value = "shippingCache", key = "#id.toString", condition = "#id != null")},
 		evict = {@CacheEvict(cacheNames = "shippingSearchCache", allEntries = true)}
 	)
-	public ShippingResDto statusUpdateShipping(UUID id, ShippingUpdateReqDto shippingUpdateReqDto, String userId) {
+	public ShippingResDto statusUpdateShipping(UUID id, ShippingUpdateReqDto shippingUpdateReqDto, UUID userId) {
 		// 동시성 처리로 인해 비관적 락 적용하여 동시성 제어
 		Shipping shipping = shippingRepository.findByIdWithPessimisticLock(id)
 			.orElseThrow(() -> new ShippingNotFoundException("ID " + id + "에 해당하는 배송 데이터를 찾을 수 없습니다."));
@@ -154,23 +154,23 @@ public class ShippingService {
 	}
 
 	// TODO: 테스트 후, 삭제(함께 슬랙 메시지 발송)
-	// 슬랙 발송 API 테스트
-	public ShippingClientDataResponseDto sendSlackMessage(UUID orderId) {
-		log.info("서비스 시작");
-		ShippingClientDataResponseDto responseDto = sendSlackNotification(orderId);
-		log.info("서비스 끝 OrderId: {}", responseDto.getRecipientId());
-		return responseDto;
-	}
-
-	private ShippingClientDataResponseDto sendSlackNotification(UUID orderId) {
-		log.info("메시지 호출 전");
-		ShippingClientDataResponseDto response = messageClient.getShippingClientData(orderId);
-		log.info("메시지 호출 후");
-		if(response == null) {
-			throw new EntityNotFoundException("슬랙 메시지가 내용이 없습니다.");
-		}
-		return response;
-	}
+	// // 슬랙 발송 API 테스트
+	// public ShippingClientDataResponseDto sendSlackMessage(UUID orderId) {
+	// 	log.info("서비스 시작");
+	// 	ShippingClientDataResponseDto responseDto = sendSlackNotification(orderId);
+	// 	log.info("서비스 끝 OrderId: {}", responseDto.getRecipientId());
+	// 	return responseDto;
+	// }
+	//
+	// private ShippingClientDataResponseDto sendSlackNotification(UUID orderId) {
+	// 	log.info("메시지 호출 전");
+	// 	ShippingClientDataResponseDto response = messageClient.getShippingClientData(orderId);
+	// 	log.info("메시지 호출 후");
+	// 	if(response == null) {
+	// 		throw new EntityNotFoundException("슬랙 메시지가 내용이 없습니다.");
+	// 	}
+	// 	return response;
+	// }
 
 	// 권한 - ALL + 담당 HUB, DVL_AGENT
 	@Transactional(readOnly = true)

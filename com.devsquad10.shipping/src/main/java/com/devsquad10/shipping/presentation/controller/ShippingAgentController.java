@@ -23,6 +23,7 @@ import com.devsquad10.shipping.application.dto.response.ShippingAgentResDto;
 import com.devsquad10.shipping.application.service.ShippingAgentService;
 import com.devsquad10.shipping.infrastructure.client.dto.ShippingAgentFeignClientPatchRequest;
 import com.devsquad10.shipping.infrastructure.client.dto.ShippingAgentFeignClientPostRequest;
+import com.devsquad10.shipping.presentation.swagger.ShippingAgentSwaggerDocs;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,7 @@ public class ShippingAgentController {
 
 	// 권한 - MASTER, 담당 HUB
 	//유저 feign client 호출하면 배송관리자 생성 endpoint 로 연결
+	@ShippingAgentSwaggerDocs.CreateShippingAgent
 	@PostMapping
 	public boolean createShippingAgent(
 		@RequestBody ShippingAgentFeignClientPostRequest request) {
@@ -43,6 +45,7 @@ public class ShippingAgentController {
 	}
 
 	// 권한 - MASTER, 담당 HUB, 담당 DLV_AGENT
+	@ShippingAgentSwaggerDocs.GetShippingAgent
 	@GetMapping("/{shippingManagerId}")
 	public ResponseEntity<ShippingAgentResponse<ShippingAgentResDto>> getShippingAgent(
 		@PathVariable(name = "shippingManagerId") UUID shippingManagerId) {
@@ -55,6 +58,7 @@ public class ShippingAgentController {
 	}
 
 	// 권한 - MASTER, 담당 HUB, 담당 DLV_AGENT
+	@ShippingAgentSwaggerDocs.SearchShippingAgents
 	@GetMapping("/search")
 	public ResponseEntity<ShippingAgentResponse<PagedShippingAgentResDto>> searchShippingAgents(
 		@ModelAttribute @Valid ShippingAgentSearchReqDto request
@@ -70,6 +74,7 @@ public class ShippingAgentController {
 
 	// 권한 - MASTER, 담당HUB
 	// 1.유저 feign client 호출하여 넘겨받은 정보 변경
+	@ShippingAgentSwaggerDocs.InfoUpdateShippingAgent
 	@PatchMapping("/info-update")
 	public boolean infoUpdateShippingAgent(@RequestBody ShippingAgentFeignClientPatchRequest request) {
 		return shippingAgentService.infoUpdateShippingAgent(request);
@@ -77,11 +82,12 @@ public class ShippingAgentController {
 
 	// 권한 - MASTER, 담당HUB
 	// 2.배송 여부 확인 변경
+	@ShippingAgentSwaggerDocs.TransitUpdateShippingAgent
 	@PatchMapping("/transit-update/{shippingManagerId}")
 	public ResponseEntity<ShippingAgentResponse<ShippingAgentResDto>> transitUpdateShippingAgent(
 		@PathVariable(name = "shippingManagerId") UUID shippingManagerId,
 		@RequestParam("isTransit") Boolean isTransit,
-		@RequestHeader("X-User-Id") String userId) {
+		@RequestHeader("X-User-Id") UUID userId) {
 
 		return ResponseEntity.status(HttpStatus.OK)
 			.body(ShippingAgentResponse.success(
@@ -92,6 +98,7 @@ public class ShippingAgentController {
 
 	// 권한 - MASTER, 담당HUB
 	// 배송담당자 ID로 배송담당자 단일 조회 - User feign client 호출 요청 삭제
+	@ShippingAgentSwaggerDocs.DeleteShippingAgentForUser
 	@DeleteMapping("/user/{shippingManagerId}")
 	public boolean deleteShippingAgentForUser(
 		@PathVariable(name = "shippingManagerId") UUID shippingManagerId) {
