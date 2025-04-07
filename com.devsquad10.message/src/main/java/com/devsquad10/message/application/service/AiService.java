@@ -104,7 +104,7 @@ public class AiService {
 			request.getRequestDetails(),
 			request.getDepartureHubName(),
 			request.getWaypointHubNames(),
-			request.getAddress(),
+			request.getDestinationHubName(),
 			request.getShippingManagerName()
 		);
 	}

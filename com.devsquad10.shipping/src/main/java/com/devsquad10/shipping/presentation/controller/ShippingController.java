@@ -51,18 +51,6 @@ public class ShippingController {
 			);
 	}
 
-	// TODO: 테스트 후, 삭제(함께 슬랙 메시지 발송)
-	// // 슬랙 발송 API 테스트
-	// @GetMapping("/slack/{orderId}")
-	// public ResponseEntity<ShippingResponse<ShippingClientDataResponseDto>> sendSlackMessage(
-	// 	@PathVariable(name = "orderId") UUID orderId
-	// ) {
-	// 	return ResponseEntity.status(HttpStatus.OK)
-	// 		.body(ShippingResponse.success(
-	// 			HttpStatus.OK.value(),
-	// 			shippingService.sendSlackMessage(orderId)));
-	// }
-
 	// 권한 - ALL + 담당 HUB, DVL_AGENT
 	@ShippingSwaggerDocs.GetShippingById
 	@GetMapping("/{id}")

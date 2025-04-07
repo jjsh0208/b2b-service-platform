@@ -23,7 +23,6 @@ public class SendSlackMessageScheduler {
 	private final ShippingRepository shippingRepository;
 	private final MessageClient messageClient;
 
-	// @Scheduled(cron = "* */1 * * * *") // 테스트용 60초 마다
 	@Scheduled(cron = "0 0 6 * * *") // 매일 오전 6시
 	public void sendDailySlackNotification() {
 		List<Shipping> dailyDeadLines = shippingRepository.findShippingWithDeadlineToday();

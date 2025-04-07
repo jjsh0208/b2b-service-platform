@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import com.devsquad10.shipping.infrastructure.client.dto.ShippingCompanyInfoDto;
 
-@FeignClient(name = "company", url = "http://localhost:19093/api/company")
+@FeignClient(name = "company", url = "http://company:8080/api/company")
 public interface CompanyClient {
 	@GetMapping("/info/{id}")
 	ShippingCompanyInfoDto findShippingCompanyInfo(@PathVariable("id") UUID id);

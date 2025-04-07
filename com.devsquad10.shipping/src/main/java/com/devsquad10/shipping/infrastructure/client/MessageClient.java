@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import com.devsquad10.shipping.infrastructure.client.dto.ShippingClientDataResponseDto;
 
-@FeignClient(name = "message", url = "http://localhost:19095/api/message")
+@FeignClient(name = "message", url = "http://message:8080/api/message")
 public interface MessageClient {
 
 	@GetMapping("/shipping-time/{orderId}")
