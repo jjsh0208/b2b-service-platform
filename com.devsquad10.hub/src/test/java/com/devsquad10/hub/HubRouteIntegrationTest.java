@@ -10,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Sort;
@@ -36,6 +37,7 @@ import com.devsquad10.hub.infrastructure.client.dto.NaverDirections5Response;
 import jakarta.transaction.Transactional;
 
 @SpringBootTest
+@AutoConfigureRestDocs
 @Transactional
 @ActiveProfiles("test")
 public class HubRouteIntegrationTest {

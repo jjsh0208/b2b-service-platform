@@ -25,6 +25,7 @@ import com.devsquad10.hub.application.dto.res.HubRouteUpdateResponseDto;
 import com.devsquad10.hub.application.dto.res.PagedHubRouteResponseDto;
 import com.devsquad10.hub.application.service.HubRouteService;
 import com.devsquad10.hub.infrastructure.client.dto.HubFeignClientGetRequest;
+import com.devsquad10.hub.presentation.documentation.HubRouterSwaggerDocs;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +38,7 @@ public class HubRouteController {
 	private final HubRouteService hubRouteService;
 
 	@PostMapping
+	@HubRouterSwaggerDocs.CreateHubRoute
 	public ResponseEntity<ApiResponse<HubRouteCreateResponseDto>> createHubRoute(
 		@Valid @RequestBody HubRouteCreateRequestDto request
 	) {
@@ -50,6 +52,7 @@ public class HubRouteController {
 	}
 
 	@GetMapping("/{id}")
+	@HubRouterSwaggerDocs.GetHubRoute
 	public ResponseEntity<ApiResponse<HubRouteGetOneResponseDto>> getHubRoute(
 		@PathVariable UUID id
 	) {
@@ -63,6 +66,7 @@ public class HubRouteController {
 	}
 
 	@PatchMapping("/{id}")
+	@HubRouterSwaggerDocs.UpdateHubRoute
 	public ResponseEntity<ApiResponse<HubRouteUpdateResponseDto>> updateHubRoute(
 		@PathVariable UUID id,
 		@Valid @RequestBody HubRouteUpdateRequestDto request
@@ -77,6 +81,7 @@ public class HubRouteController {
 	}
 
 	@DeleteMapping("/{id}")
+	@HubRouterSwaggerDocs.DeleteHubRoute
 	public ResponseEntity<ApiResponse<String>> deleteHubRoute(
 		@PathVariable UUID id
 	) {
@@ -89,6 +94,7 @@ public class HubRouteController {
 	}
 
 	@GetMapping
+	@HubRouterSwaggerDocs.SearchHubRoutes
 	public ResponseEntity<ApiResponse<PagedHubRouteResponseDto>> getAllHubs(
 		@ModelAttribute @Valid HubRouteSearchRequestDto request
 	) {
@@ -102,6 +108,7 @@ public class HubRouteController {
 	}
 
 	@GetMapping("/info/{departureHubId}/{destinationHubId}")
+	@HubRouterSwaggerDocs.getHubRouteInfo
 	public List<HubFeignClientGetRequest> getHubRouteInfo(
 		@PathVariable("departureHubId") UUID departureHubId,
 		@PathVariable("destinationHubId") UUID destinationHubId
