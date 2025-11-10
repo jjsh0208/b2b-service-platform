@@ -1,0 +1,35 @@
+services:
+  redis-stack:
+    image: redis/redis-stack
+    container_name: redis-stack-compose
+    restart: always
+    environment:
+      REDIS_ARGS: "--requirepass systempass"
+    ports:
+      - 6379:6379
+      - 8001:8001
+
+  rabbitmq:
+    image: rabbitmq:management
+    platform: linux/amd64
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"   # AMQP 프로토콜 포트
+      - "15672:15672" # 관리 UI 포트
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    restart: unless-stopped
+
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: zipkin
+    ports:
+      - "9411:9411" # Zipkin UI 포트
+    environment:
+      - ZIPKIN_HTTP_PORT=9411
+    restart: always
+
+volumes:
+  service_data:
+    driver: local

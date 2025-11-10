@@ -16,8 +16,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: company
-    container_name: company
+    image: shipping
+    container_name: shipping
     depends_on:
       - postgres
     env_file:

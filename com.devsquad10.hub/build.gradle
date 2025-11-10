@@ -1,53 +1,131 @@
 plugins {
-	id 'java'
-	id 'org.springframework.boot' version '3.3.9'
-	id 'io.spring.dependency-management' version '1.1.7'
+    id 'java'
+    id 'org.springframework.boot' version '3.3.9'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'com.epages.restdocs-api-spec' version "0.19.2"
 }
 
 group = 'com.devsquad10'
 version = '0.0.1-SNAPSHOT'
 
 java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(17)
-	}
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
 }
 
 configurations {
-	compileOnly {
-		extendsFrom annotationProcessor
-	}
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
 }
 
 repositories {
-	mavenCentral()
+    mavenCentral()
 }
 
 ext {
-	set('springCloudVersion', "2023.0.5")
+    set('springCloudVersion', "2023.0.5")
 }
 
 dependencies {
-	implementation 'com.h2database:h2'
-	implementation 'org.springframework.boot:spring-boot-starter-amqp'
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
-	compileOnly 'org.projectlombok:lombok'
-	runtimeOnly 'org.postgresql:postgresql'
-	annotationProcessor 'org.projectlombok:lombok'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testImplementation 'org.springframework.amqp:spring-rabbit-test'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc:3.0.0'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
+    testImplementation 'com.epages:restdocs-api-spec-mockmvc:0.19.2'
+
+    // 분산 추적
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'io.micrometer:micrometer-tracing-bridge-brave'
+    implementation 'io.github.openfeign:feign-micrometer'
+    implementation 'io.zipkin.reporter2:zipkin-reporter-brave'
+
+    implementation 'org.springframework.boot:spring-boot-configuration-processor'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    //queryDSL 의존성
+    implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
+    annotationProcessor "com.querydsl:querydsl-apt:5.0.0:jakarta"
+    annotationProcessor "jakarta.annotation:jakarta.annotation-api"
+    annotationProcessor "jakarta.persistence:jakarta.persistence-api"
+
+    implementation 'com.h2database:h2'
+    implementation 'org.springframework.boot:spring-boot-starter-amqp'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+    compileOnly 'org.projectlombok:lombok'
+    runtimeOnly 'org.postgresql:postgresql'
+    annotationProcessor 'org.projectlombok:lombok'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.amqp:spring-rabbit-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 dependencyManagement {
-	imports {
-		mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
-	}
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
 }
 
 tasks.named('test') {
-	useJUnitPlatform()
+    useJUnitPlatform()
+}
+
+def querydslSrcDir = 'src/main/generated'
+
+clean {
+    delete file(querydslSrcDir)
+}
+
+// 컴파일 시 빌드 폴더 삭제
+compileJava {
+    dependsOn 'clean'
+}
+
+// OpenApi에 들어갈 메타데이터를 추가
+openapi3 {
+    servers = [
+            {
+                url = 'http://localhost:19092'
+            }
+    ]
+    title = 'HUB API'
+    description = ''
+    version = '1.0.0'
+    format = 'json'
+}
+
+// task 생성
+tasks.register('setDocs') {
+    // openapi3 태스크를 먼저 실행
+    dependsOn 'openapi3'
+    // 문서가 다 생성되면 build 파일에 복사
+    // 파일명 뒤에 서비스명을 붙여 중복 생성 방지
+    doLast {
+        copy {
+            from "build/api-spec"
+            include "*.json"
+            include "*.yaml"
+            into "build/resources/main/static/springdoc"
+            rename { String fileName ->
+                if (fileName.endsWith('.json')) {
+                    return fileName.replace('.json', '-hub.json')
+                } else if (fileName.endsWith('.yaml')) {
+                    return fileName.replace('.yaml', '-hub.yml')
+                }
+                return fileName
+            }
+        }
+    }
+}
+
+// bootRun 실행 시 문서 생성 태스크를 실행
+bootRun {
+    dependsOn 'setDocs'
+}
+
+// bootJar 실행 시 문서 생성 태스크를 실행
+bootJar {
+    dependsOn 'setDocs'
 }
