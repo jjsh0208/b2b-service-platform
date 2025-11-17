@@ -73,13 +73,11 @@
 (프로젝트 전반 및 담당 도메인에서 사용한 기술입니다.)
 
 * **Backend:** Java 17, Spring Boot 3.x, Spring Data JPA, QueryDSL, Spring Security 6.x
-* **Database:** PostgreSQL, Redis
+* **Database & Cache:** PostgreSQL, Redis
 * **Messaging:** RabbitMQ
-* **MSA Comms:** Feign Client, Spring Cloud Gateway, Eureka
-* **DevOps:** Docker, Docker-Compose
-* **Auth:** JWT (JSON Web Token)
-* **API:** RESTful API, Swagger (Springdoc OpenAPI)
-* **ETC:** Slack Webhook, Gemini API, JMeter
+* **MSA Architecture:** Spring Cloud Gateway, Eureka, OpenFeign
+* **DevOps & Infra:** Docker
+* **ETC:** Slack Webhook
   
 ## ⚙️ 적용 기술
 
