@@ -110,6 +110,22 @@
 > 슬랙 메시지 양식을 자동화하고, 배송 순서를 최적화하여 효율적인 물류 관리를 지원합니다.
 
 
+
+<br>
+
+## 📖 서비스 아키텍처
+
+![Image](https://github.com/user-attachments/assets/0ddecc6a-7a5c-46d1-ad6e-16d3617cb1ce)
+
+<br>
+
+## 🧮 ERD 설계
+
+![Image](https://github.com/user-attachments/assets/a3a97c94-3753-4384-a9e5-54b5b13ab4eb)
+
+
+<br>
+
 ## 🗂️ 프로젝트 구조
 
 ```
@@ -178,17 +194,6 @@ b2b-project/                         # B2B 루트 프로젝트
 
 ```
 
-<br>
-
-## 📖 서비스 아키텍처
-
-![Image](https://github.com/user-attachments/assets/0ddecc6a-7a5c-46d1-ad6e-16d3617cb1ce)
-
-<br>
-
-## 🧮 ERD 설계
-
-![Image](https://github.com/user-attachments/assets/a3a97c94-3753-4384-a9e5-54b5b13ab4eb)
 
 
 ## 📌 팀원 역할분담
@@ -238,6 +243,3 @@ b2b-project/                         # B2B 루트 프로젝트
   <th>Hub <br> Message <br> Gemini AI </th> <!-- 지웅 -->
   </tr>
 </table>
-
-<br>
-
