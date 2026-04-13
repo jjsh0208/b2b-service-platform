@@ -1,7 +1,5 @@
 # 📌 물류 관리 및 배송 시스템 (DevSquad10) - 개인 기여 내역
 
-![Image](https://github.com/user-attachments/assets/727bd681-d84b-4310-8b9e-080859fe3b39)
-
 ## 🗣️ 프로젝트 소개
 
 - **프로젝트 명:** 물류 관리 및 배송 시스템 (DevSquad10)
@@ -9,6 +7,19 @@
 - **개발 기간:** 2025년 3월 11일 ~ 2025년 3월 26일
 - **원본 레포지토리:** [DevSquad10 GitHub Repository](https://github.com/DevSquad10/b2b-service-platform)
 - **나의 역할:** **팀장 (Team Leader)** / 백엔드 개발 (`주문`, `상품`, `업체` 도메인 담당)
+
+
+## 📖 서비스 아키텍처
+
+<img width="4648" height="2988" alt="배송이 10조 아키텍처 개선" src="https://github.com/user-attachments/assets/c813a834-deb2-4b86-81e5-60a779d89abb" />
+
+
+<br>
+
+## 🧮 ERD 설계
+
+![Image](https://github.com/user-attachments/assets/a3a97c94-3753-4384-a9e5-54b5b13ab4eb)
+
 
 <br>
 
@@ -113,15 +124,7 @@
 
 <br>
 
-## 📖 서비스 아키텍처
 
-![Image](https://github.com/user-attachments/assets/0ddecc6a-7a5c-46d1-ad6e-16d3617cb1ce)
-
-<br>
-
-## 🧮 ERD 설계
-
-![Image](https://github.com/user-attachments/assets/a3a97c94-3753-4384-a9e5-54b5b13ab4eb)
 
 
 <br>
