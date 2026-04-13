@@ -9,17 +9,16 @@
 - **나의 역할:** **팀장 (Team Leader)** / 백엔드 개발 (`주문`, `상품`, `업체` 도메인 담당)
 
 
+<br>
+
 ## 📖 서비스 아키텍처
 
 <img width="4648" height="2988" alt="배송이 10조 아키텍처 개선" src="https://github.com/user-attachments/assets/c813a834-deb2-4b86-81e5-60a779d89abb" />
 
 
-<br>
-
 ## 🧮 ERD 설계
 
 ![Image](https://github.com/user-attachments/assets/a3a97c94-3753-4384-a9e5-54b5b13ab4eb)
-
 
 <br>
 
