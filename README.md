@@ -1,289 +1,81 @@
-# 📌 물류 관리 및 배송 시스템 (DevSquad10)
+## DevSquad10: MSA 기반 B2B 물류 및 배송 플랫폼
+MSA(Microservices Architecture)와 이벤트 기반 통신을 적용한 대규모 B2B 물류 관리 시스템
+- **개발 기간:** 2025년 3월 11일 ~ 2025년 3월 26일
+- **핵심 목표:** 서비스 간 독립성을 유지하면서 이벤트 기반 아키텍처 및 분산 락을 통해 대규모 트래픽 환경에서의 데이터 정합성 보장
+- **담당 역할:** 백엔드 개발 (업체/주문/상품 도메인) 및 분산 시스템 성능 최적화
+- **원본 레포지토리:** [DevSquad10 GitHub Repository](https://github.com/DevSquad10/b2b-service-platform)
 
-![Image](https://github.com/user-attachments/assets/727bd681-d84b-4310-8b9e-080859fe3b39)
+<br><br>
 
-## 📖 프로젝트 목적 개요
+## 시스템 아키텍처 및 ERD
 
-### 대규모 AI 시스템 프로젝트
-
-**물류 관리 및 배송 시스템을 MSA(Microservices Architecture) 기반의 시스템을 설계하고 구현하면서 다양한 기술과 방법론을 적용해보는게 목표입니다.**
-
-### 주요 목표
-
-- <b>MSA 설계 및 구현</b>
-    - 서비스 간 독립성을 유지하면서 유기적으로 연동되며는 마이크로서비스 아키텍처(MSA) 설계
-    - API 변경시 발생할 수 있는 문제를 최소화하기 위한 버전 관리
+<img width="100%" alt="DevSquad10 아키텍처" src="https://github.com/user-attachments/assets/0ddecc6a-7a5c-46d1-ad6e-16d3617cb1ce" />
 
 <br>
 
-- <b>협업 및 프로젝트 관리</b>
-    - GitHub Issues와 Slack을 활용하여 팀원 간 원활한 소통 및 업무 분배
-    - API 요구사항 및 공유해야 할 정보는 Notion을 통해 문서화하여 체계적으로 관리
-    - 코드 리뷰 및 PR(Pull Request) 프로세스를 통해 코드 품질 유지 및 개선
+<img width="100%" alt="DevSquad10 ERD" src="https://github.com/user-attachments/assets/a3a97c94-3753-4384-a9e5-54b5b13ab4eb" />
+
+<br><br>
+
+## 핵심 기술적 성과 및 트러블슈팅
+
+### 1. 파티션 큐와 분산 락을 활용한 핫 키(Hot Key) 트래픽 격리 및 UX 방어
+- **문제:** 특정 이벤트 상품에 트래픽이 집중될 경우, 다수의 스레드가 단일 큐에서 비관적 락을 획득하기 위해 대기하며 DB 커넥션 풀(HikariCP)을 모두 점유. 이로 인해 무관한 일반 상품의 결제 요청까지 지연되는 심각한 앞단 막힘(Head-of-Line Blocking) 현상 발생.
+- **해결:** - RabbitMQ `x-consistent-hash` 익스체인지를 도입하여 `productId` 기준으로 라우팅을 3개의 큐로 분리, 특정 상품의 부하가 다른 상품에 영향을 주지 않도록 시스템을 물리적으로 격리.
+  - DB 커넥션 고갈을 막기 위해 비관적 락을 제거하고, Redis 분산 락(Redisson)과 Facade 패턴을 적용하여 애플리케이션 레벨에서 동시성 제어.
+- **결과:** 집중 부하 발생 시 일반 상품의 처리 지연 시간을 234ms에서 7ms로 약 **33배 향상(단축)** 시켰으며, 대규모 트래픽 상황에서도 100% 데이터 정합성을 유지하며 사용자 경험(UX)을 완벽하게 방어.
+- **Wiki:** [RabbitMQ 파티셔닝 및 분산 락 적용기](https://github.com/DevSquad10/b2b-service-platform/wiki/%5BTrouble-Shooting%5D-%5B%EC%8A%B9%ED%98%84%5D-RabbitMQ-concurrency-%EC%84%A4%EC%A0%95%EA%B3%BC-%EB%B9%84%EA%B4%80%EC%A0%81-%EB%9D%BD%EC%9D%84-%ED%99%9C%EC%9A%A9%ED%95%9C-%EC%9E%AC%EA%B3%A0-%EA%B0%90%EC%86%8C-%EB%8F%99%EC%8B%9C%EC%84%B1-%EC%A0%9C%EC%96%B4)
 
 <br>
 
-- <b>이벤트 기반 아키텍처 적용</b>
-    - RabbitMQ를 활용한 비동기 메시징 시스템 도입
-    - 서비스 간 의존도를 줄이고 확장성을 높이기 위한 이벤트 기반 통신(Event-Driven Architecture) 적용
+### 2. Saga Pattern 기반 분산 트랜잭션 무한 재시도 방지 로직 구현
+- **문제:** MSA 환경에서 주문-상품-배송 간 트랜잭션 실패 시, RabbitMQ의 기본 재시도 메커니즘으로 인해 실패한 이벤트가 무한 루프에 빠지며 메시지 브로커 자원 고갈 위험 발생.
+- **해결:** DLQ(Dead Letter Queue)와 Redis 기반의 멱등성 검증 키를 활용하여 특정 횟수 이상 실패한 메시지를 별도로 격리하고, 보상 트랜잭션(Rollback) 이벤트를 발행하도록 Saga Pattern 고도화.
+- **결과:** 트랜잭션 실패 시 데이터의 최종적 일관성(Eventual Consistency)을 안전하게 보장하고 시스템 마비 원천 차단.
+- **Wiki:** [Saga Pattern 무한 재시도 방지](https://github.com/DevSquad10/b2b-service-platform/wiki/%5BTrouble-Shooting%5D-%5B%EC%8A%B9%ED%98%84%5D-saga-pattern-%EB%AC%B4%ED%95%9C-%EC%9E%AC%EC%8B%9C%EB%8F%84-%EB%B0%A9%EC%A7%80)
+
+<br><br>
+
+## 사용 기술 스택
+
+- **Backend:** Java 17, Spring Boot 3.x, Spring Data JPA, QueryDSL
+- **Database & Cache:** PostgreSQL, Redis
+- **Messaging:** RabbitMQ
+- **MSA Architecture:** Spring Cloud Gateway, Eureka, OpenFeign
+- **DevOps & Infra:** Docker, Docker-Compose, Apache Tomcat 9.0
+- **Testing & Tools:** JMeter, Swagger (Springdoc OpenAPI)
+- **External API:** Gemini API (AI 자동화), Slack API
 
 <br>
 
-- <b>AI 기술 적용 (Gemini API 활용)</b>
-    - AI를 활용해 특정 기능을 자동화하고, 실제 프로젝트에 적용 경험 확보
+## 프로젝트 구조
 
-<br>
+총 9개의 마이크로서비스로 구성되어 있으며, 아래는 제가 주로 담당하여 구현한 **상품, 주문, 업체 도메인**을 중심으로 요약한 디렉토리 구조입니다.
 
-## 🎯 팀원 역할분담
-
-<table>
-  <tr>
-    <th>
-      <a href="https://github.com/jjsh0208" target="_blank">
-        전승현&lt;팀장&gt;
-      </a>
-    </th>
-    <th>
-      <a href="https://github.com/minji-git" target="_blank">
-        김민지
-      </a>
-    </th>
-    <th>
-      <a href="https://github.com/josephuk77" target="_blank">
-        이승욱
-      </a>
-    </th>
-    <th>
-      <a href="https://github.com/aerhergag00" target="_blank">
-        이지웅
-      </a>
-    </th>
-  </tr>
-  <tr>
-    <td>
-      <img src="https://github.com/jjsh0208.png" width="150" alt="전승현 팀장">
-    </td>
-    <td>
-      <img src="https://github.com/minji-git.png" width="150" alt="이채연">
-    </td>
-    <td>
-      <img src="https://github.com/josephuk77.png" width="150" alt="이서우">
-    </td>
-    <td>
-      <img src="https://github.com/aerhergag00.png" width="150" alt="윤창근">
-    </td>
-  </tr>
-  <tr>
-
-  <th>Company <br> Product <br> Order  <br>  <!-- 승현 -->
-  <th>Shipping <br> Shipping Agent</th> <!-- 민지 -->
-  <th>User <br> Eureka <br> Gateway </th> <!-- 승욱 -->
-  <th>Hub <br> Message <br> Gemini AI </th> <!-- 지웅 -->
-  </tr>
-</table>
-
-<br>
-
-## 📅 프로젝트 진행 기간
-
-- 2025년 3월 11일 ~ 2025년 3월 26일
-
-## 🏗 서비스 구성
-
-### 💾 프로젝트 구조
-
-```
-b2b-project/                         # B2B 루트 프로젝트
-│── com.devsquad10.company/          # 업체 관련 서비스
-│   ├── src/main/java/com/devsquad10/company/
-│   │   ├── application/             # 애플리케이션 서비스 계층
-│   │   ├── domain/                  # 도메인 모델 및 엔티티
-│   │   ├── infrastructure/          # 데이터베이스, 외부 API 연동
-│   │   ├── presentation/            # REST API 및 컨트롤러
-│   ├── src/test/java/com/devsquad10/company/
+```text
+b2b-project (Root)
+├── com.devsquad10.product                 # 상품 및 재고 서비스 (담당)
+│   ├── src/main/java/com/devsquad10/product
+│   │   ├── presentation/                  # REST API Endpoints 및 외부 호출 응답
+│   │   ├── application/                   # 비즈니스 로직, 분산 락 Facade, RabbitMQ 라우팅
+│   │   ├── domain/                        # 핵심 도메인 모델 및 예외 처리
+│   │   └── infrastructure/                # Redis/PostgreSQL 영속성 및 QueryDSL 구현
+│   └── Dockerfile
 │
-│── com.devsquad10.eureka/           # 서비스 디스커버리 (Eureka)
-│   ├── src/main/java/com/devsquad10/eureka/
+├── com.devsquad10.order                   # 주문 서비스 (담당)
+│   ├── src/main/java/com/devsquad10/order
+│   │   └── (상품 서비스와 동일한 도메인 중심 계층형 아키텍처 적용)
+│   └── Dockerfile
 │
-│── com.devsquad10.gateway/          # API Gateway (Spring Cloud Gateway)
-│   ├── src/main/java/com/devsquad10/gateway/
-│       ├── infrastructure/ 
+├── com.devsquad10.company                 # 업체 정보 관리 서비스 (담당)
+│   ├── src/main/java/com/devsquad10/company
+│   │   └── (상품 서비스와 동일한 도메인 중심 계층형 아키텍처 적용)
+│   └── Dockerfile
 │
-│── com.devsquad10.hub/              # 물류 허브 서비스
-│   ├── src/main/java/com/devsquad10/hub/
-│   │   ├── application/
-│   │   ├── domain/
-│   │   ├── infrastructure/
-│   │   ├── presentation/
+├── com.devsquad10.eureka                  # 서비스 디스커버리 (공통)
+├── com.devsquad10.gateway                 # API 게이트웨이 및 JWT 인증 (공통)
 │
-│── com.devsquad10.message/          # 메시징 서비스 (slack)
-│   ├── src/main/java/com/devsquad10/message/
-│   │   ├── application/
-│   │   ├── domain/
-│   │   ├── infrastructure/
-│   │   ├── presentation/
-│
-│── com.devsquad10.order/            # 주문 서비스
-│   ├── src/main/java/com/devsquad10/order/
-│   │   ├── application/
-│   │   ├── domain/
-│   │   ├── infrastructure/
-│   │   ├── presentation/
-│
-│── com.devsquad10.product/          # 상품 서비스
-│   ├── src/main/java/com/devsquad10/product/
-│   │   ├── application/
-│   │   ├── domain/
-│   │   ├── infrastructure/
-│   │   ├── presentation/
-│
-│── com.devsquad10.shipping/         # 배송 서비스
-│   ├── src/main/java/com/devsquad10/shipping/
-│   │   ├── application/
-│   │   ├── domain/
-│   │   ├── infrastructure/
-│   │   ├── presentation/
-│
-│── com.devsquad10.user/             # 사용자 서비스
-│   ├── src/main/java/com/devsquad10/user/
-│   │   ├── application/
-│   │   ├── domain/
-│   │   ├── infrastructure/
-│   │   ├── presentation/
-│
-│
-│── docker-compose.yml                # Docker 설정 파일
-│── README.md                         # 프로젝트 설명 문서
-│── settings.gradle.kts               # Gradle 설정 파일
-
-```
-
-### 🚀 서비스 엔드포인트
-
-| 서비스명         | 설명                | 기본 URL                   | 포트    |
-|--------------|-------------------|--------------------------|-------|
-| **Eureka**   | 서비스 디스커버리         | `http://localhost:19091` | 19091 |
-| **Gateway**  | API Gateway       | `http://localhost:19092` | 19092 |
-| **Company**  | 업체 정보 관리 서비스      | `http://localhost:19093` | 19093 |
-| **Hub**      | 물류 허브 서비스         | `http://localhost:19094` | 19094 |
-| **Message**  | 메시징 서비스 ( Slack ) | `http://localhost:19095` | 19095 |
-| **Order**    | 주문 서비스            | `http://localhost:19096` | 19096 |
-| **Product**  | 상품 서비스            | `http://localhost:19097` | 19097 |
-| **Shipping** | 배송 서비스            | `http://localhost:19098` | 19098 |
-| **User**     | 사용자 서비스           | `http://localhost:19099` | 19099 |
-
-<br>
-
-
-
-
-<br>
-
-## ☁️ Architecture
-
-![Image](https://github.com/user-attachments/assets/0ddecc6a-7a5c-46d1-ad6e-16d3617cb1ce)
-
-<br>
-
-## 📌 ERD
-
-![Image](https://github.com/user-attachments/assets/a3a97c94-3753-4384-a9e5-54b5b13ab4eb)
-
-
- <br>
-
-## 🚨 Trouble Shooting
-
-[승현] saga pattern 무한 재시도
-방지- [wiki 보기](https://github.com/DevSquad10/b2b-service-platform/wiki/%5BTrouble-Shooting%5D-%5B%EC%8A%B9%ED%98%84%5D-saga-pattern-%EB%AC%B4%ED%95%9C-%EC%9E%AC%EC%8B%9C%EB%8F%84-%EB%B0%A9%EC%A7%80)
-
-[승현] RabbitMQ concurrency 설정과 비관적 락을 활용한 재고 감소 동시성
-제어 - [wiki 보기](https://github.com/DevSquad10/b2b-service-platform/wiki/%5BTrouble-Shooting%5D-%5B%EC%8A%B9%ED%98%84%5D-RabbitMQ-concurrency-%EC%84%A4%EC%A0%95%EA%B3%BC-%EB%B9%84%EA%B4%80%EC%A0%81-%EB%9D%BD%EC%9D%84-%ED%99%9C%EC%9A%A9%ED%95%9C-%EC%9E%AC%EA%B3%A0-%EA%B0%90%EC%86%8C-%EB%8F%99%EC%8B%9C%EC%84%B1-%EC%A0%9C%EC%96%B4)
-
-[승욱] SpringBoot server port
-오류 - [wiki 보기](https://github.com/DevSquad10/b2b-service-platform/wiki/%5BTrouble-Shooting%5D-%5B%EC%8A%B9%EC%9A%B1%5D-SpringBoot-server-port-%EC%98%A4%EB%A5%98)
-
-[민지] JPQL 날짜
-비교 - [wiki 보기](https://github.com/DevSquad10/b2b-service-platform/wiki/%5BTrouble-Shooting%5D-%5B%EB%AF%BC%EC%A7%80%5D-JPQL-%EB%82%A0%EC%A7%9C-%EB%B9%84%EA%B5%90)
-
-[지웅] 허브 간 계산 알고리즘 성능 최적화 -
-[wiki 보기](https://github.com/DevSquad10/b2b-service-platform/wiki/%5BTrouble-Shooting%5D-%5B%EC%A7%80%EC%9B%85%5D-%ED%97%88%EB%B8%8C-%EA%B0%84-%EA%B3%84%EC%82%B0-%EC%95%8C%EA%B3%A0%EB%A6%AC%EC%A6%98-%EC%84%B1%EB%8A%A5-%EC%B5%9C%EC%A0%81%ED%99%94)
-
-## ⚙️ 적용 기술
-
-### *🔍 QueryDSL* ###
-
-> 검색, 정렬 등 동적 쿼리 작성을 위해 사용하며, 타입 안전한 SQL 쿼리를 생성하기 위해 활용했습니다.
-
-### *🚀 Redis* ###
-
-> 연속된 요청으로 인한 DB 병목을 해소하기 위해 캐싱 용도로 사용하여 빠른 데이터 접근을 지원합니다.
-
-### *📩 RabbitMQ 비동기 처리* ###
-
-> MSA 도메인 간 비동기 이벤트 처리를 통해 서비스 간 결합도를 감소시키고 안정성을 향상시켰습니다.
-
-### *⏰ Scheduler 사용* ###
-
-> 매일 오전 6시에 배송 담당자들에게 당일 배송 메시지 안내를 자동으로 보내기 위해 사용했습니다.
-
-### *🔒 비관적 락 구현* ###
-
-> 재고 감소 , 배송 담당자 배정 할당 등 동시성 문제가 발생할 수 있는 중요한 트랜잭션에서 충돌을 방지하기 위해 사용했습니다.
-
-### *🔗 Feign Client* ###
-
-> MSA 환경에서 다른 서비스의 API를 호출할 때 간편하게 HTTP 통신을 처리하기 위해 사용했습니다.
-
-### *🤖 Gemini AI* ###
-
-> 슬랙 메시지 양식을 자동화하고, 배송 순서를 최적화하여 효율적인 물류 관리를 지원합니다.
-
-<br>
-
-## 🛠 기술 스택
-
-## Backend
-
-- **Framework**: Spring Boot 3.x
-  <!-- Spring Boot 최신 버전 사용 -->
-- **Database Access**: Spring Data JPA , QueryDSL
-  <!-- ORM 프레임워크로 데이터베이스와의 연동을 쉽게 처리 -->
-- **Security**: Spring Security 6.x
-  <!-- 인증과 인가를 위한 보안 모듈 -->
-- **API Communication**: Feign Client
-- **Message Broker**: RabbitMQ
-- **Caching**: Redis
-- **Testing**: JMeter
-- **API Documentation**: Swagger (Springdoc OpenAPI)
-  <!-- API 문서를 자동 생성해주는 Swagger 도구 -->
-- **REST API**: RESTful API 설계
-  <!-- REST 아키텍처 스타일에 따른 API 설계 -->
-
-## Database
-
-- **Primary DB**: PostgreSQL
-  <!-- 주 데이터베이스로 사용 -->
-
-## Server
-
-- **Application Server**: Apache Tomcat 9.0
-  <!-- 서블릿 컨테이너로 사용하는 Tomcat 서버 -->
-
-## Authentication
-
-- **Token-Based Authentication**: JWT (JSON Web Token)
-  <!-- 토큰 기반 인증 방식으로 JWT 사용 -->
-
-## Devops
-
-- **배포 및 운영**: Docker, Docker-Compose
-
-## Etc
-
-- **외부 API 연동**
-  -
-        - **Gemini API** : 상품 발송 시한 예측 및 상품 설명 문구 추천을 위한 외부 AI API 연동.
-
-
-
+├── com.devsquad10.hub                     # 물류 허브 서비스 (타 팀원 담당)
+├── com.devsquad10.shipping                # 배송 서비스 (타 팀원 담당)
+├── com.devsquad10.message                 # Slack 알림 및 AI 연동 서비스 (타 팀원 담당)
+└── com.devsquad10.user                    # 사용자 인증/인가 서비스 (타 팀원 담당)
