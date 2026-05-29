@@ -46,7 +46,12 @@ MSA(Microservices Architecture)와 이벤트 기반 통신을 적용한 대규�
 - **Testing & Tools:** JMeter, Swagger (Springdoc OpenAPI)
 - **External API:** Gemini API (AI 자동화), Slack API
 
-<br>
+<br> <br>
+
+## 이벤트 시퀀스
+<img width="2585" height="1691" alt="배송이십조 전체 시퀀스" src="https://github.com/user-attachments/assets/2a5fdd31-40d1-43aa-aa03-e35867b095ea" />
+
+<br><br>
 
 ## 프로젝트 구조
 
